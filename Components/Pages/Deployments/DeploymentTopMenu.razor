@@ -1,0 +1,112 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" style="border-bottom: none;">
+            <li class="nav-item">
+                <a href="/tools/deployments" class="nav-link @(Current == "dashboard" ? "active" : "")">
+                    <i class="ti ti-layout-dashboard me-1"></i>Tableau de bord
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <button type="button" class="nav-link dropdown-toggle @(IsGeneralSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-settings me-1"></i>Général
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item @(Current == "agents" ? "active" : "")" href="/tools/deployments/agent">
+                            <i class="ti ti-cpu me-2"></i>Gestion des agents
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "computergroups" ? "active" : "")" href="/tools/deployments/computer-groups">
+                            <i class="ti ti-devices me-2"></i>Groupe d'ordinateurs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "deploymentconfig" ? "active" : "")" href="/tools/deployments/config">
+                            <i class="ti ti-settings me-2"></i>Configuration générale
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <button type="button" class="nav-link dropdown-toggle @(IsTasksSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-list-check me-1"></i>Tâches
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item @(Current == "supervision" ? "active" : "")" href="/tools/deployments/supervision">
+                            <i class="ti ti-activity me-2"></i>Supervision / Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/admin/inventory">
+                            <i class="ti ti-file-upload me-2"></i>Importer un fichier de l'agent
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "collects" ? "active" : "")" href="/tools/deployments/collects">
+                            <i class="ti ti-file-database me-2"></i>Informations de collecte
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "timeslots" ? "active" : "")" href="/tools/deployments/timeslots">
+                            <i class="ti ti-calendar-time me-2"></i>Créneau horaire
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="Pas encore disponible">
+                    <i class="ti ti-git-branch me-1"></i>Règles
+                </span>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="Pas encore disponible">
+                    <i class="ti ti-router me-1"></i>Réseau
+                </span>
+            </li>
+            <li class="nav-item dropdown">
+                <button type="button" class="nav-link dropdown-toggle @(IsDeploySection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-rocket me-1"></i>Déployer
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item @(Current == "packages" ? "active" : "")" href="/tools/deployments/packages">
+                            <i class="ti ti-package me-2"></i>Gestion de paquets
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "mirrors" ? "active" : "")" href="/tools/deployments/mirrors">
+                            <i class="ti ti-server-2 me-2"></i>Serveurs miroirs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "interactiontemplates" ? "active" : "")" href="/tools/deployments/interaction-templates">
+                            <i class="ti ti-message-2-question me-2"></i>Gabarits d'interactions utilisateurs
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="Pas encore disponible">
+                    <i class="ti ti-help me-1"></i>Guide
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Clef de la page active : "dashboard", "computergroups", "deploymentconfig", "supervision",
+    /// "collects", "timeslots", "packages", "mirrors" ou "interactiontemplates". Détermine à la fois
+    /// l'onglet du haut mis en évidence et, pour les sous-pages des menus déroulants
+    /// "Général"/"Tâches"/"Déployer", l'entrée active dans ces sous-menus.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Current { get; set; } = string.Empty;
+
+    private bool IsTasksSection => Current is "supervision" or "collects" or "timeslots";
+    private bool IsGeneralSection => Current is "agents" or "computergroups" or "deploymentconfig";
+    private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates";
+}

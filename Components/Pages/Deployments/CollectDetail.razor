@@ -1,0 +1,270 @@
+@page "/tools/deployments/collects/{CollectId:int}"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_collect?.Name ?? "Informations de collecte")</PageTitle>
+
+<DeploymentTopMenu Current="collects" />
+
+@if (_collect is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-file-off fs-1"></i>
+        <p class="mt-2">Cette définition de collecte est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+                <i class="ti ti-file-database"></i>
+                <span>Informations de collecte</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "config" ? "active" : "")" @onclick='() => SetTab("config")'>
+                <i class="ti ti-settings"></i>
+                <span>Collect configuration</span>
+            </button>
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "main":
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Nom</label>
+                                <input class="form-control" @bind="_collect.Name" @bind:event="oninput" />
+                            </div>
+                            <div class="glpi-fiche-field">
+                                <label>Type</label>
+                                <select class="form-select" @bind="_collect.Type">
+                                    <option value="@CollectType.Registry">Base de registre</option>
+                                    <option value="@CollectType.Wmi">WMI</option>
+                                    <option value="@CollectType.FileSearch">Recherche de fichier</option>
+                                </select>
+                            </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" @bind="_collect.Enabled" id="collectEnabled" />
+                                <label class="form-check-label" for="collectEnabled">Activé</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Commentaires</label>
+                                <textarea class="form-control" rows="4" @bind="_collect.Comment"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                        </button>
+                        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                        </button>
+                    </div>
+                    break;
+
+                case "config":
+                    @if (_collect.Type == CollectType.Registry)
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-registered"></i>Contenu de la base de registre Windows</div>
+
+                            @if (_collect.RegistryEntries.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th>Ruche</th>
+                                                <th>Chemin</th>
+                                                <th>Clé</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (CollectRegistryEntry entry in _collect.RegistryEntries)
+                                            {
+                                                <tr>
+                                                    <td>@entry.Name</td>
+                                                    <td>@entry.Hive</td>
+                                                    <td>@entry.Path</td>
+                                                    <td>@entry.RegistryKey</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveRegistryEntryAsync(entry)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label">Nom</label>
+                                    <input class="form-control" @bind="_newRegistryEntry.Name" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Ruche</label>
+                                    <select class="form-select" @bind="_newRegistryEntry.Hive">
+                                        <option value="HKEY_LOCAL_MACHINE">HKEY_LOCAL_MACHINE</option>
+                                        <option value="HKEY_CURRENT_USER">HKEY_CURRENT_USER</option>
+                                        <option value="HKEY_USERS">HKEY_USERS</option>
+                                        <option value="HKEY_CLASSES_ROOT">HKEY_CLASSES_ROOT</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Chemin</label>
+                                    <input class="form-control" @bind="_newRegistryEntry.Path" placeholder="/SYSTEM/CurrentControlSet/..." />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Clé</label>
+                                    <input class="form-control" @bind="_newRegistryEntry.RegistryKey" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newRegistryEntry.Name)" @onclick="AddRegistryEntryAsync">
+                                        <i class="ti ti-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (_collect.Type == CollectType.Wmi)
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-server-cog"></i>Collect configuration (WMI)</div>
+
+                            @if (_collect.WmiEntries.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th>Moniker</th>
+                                                <th>Classe</th>
+                                                <th>Propriétés</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (CollectWmiEntry entry in _collect.WmiEntries)
+                                            {
+                                                <tr>
+                                                    <td>@entry.Name</td>
+                                                    <td>@entry.Moniker</td>
+                                                    <td>@entry.WmiClass</td>
+                                                    <td>@entry.Properties</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveWmiEntryAsync(entry)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label">Nom</label>
+                                    <input class="form-control" @bind="_newWmiEntry.Name" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Moniker</label>
+                                    <input class="form-control" @bind="_newWmiEntry.Moniker" placeholder="winmgmts://./root/cimv2" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Classe</label>
+                                    <input class="form-control" @bind="_newWmiEntry.WmiClass" placeholder="Win32_OperatingSystem" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Propriétés</label>
+                                    <input class="form-control" @bind="_newWmiEntry.Properties" placeholder="LastBootUpTime" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newWmiEntry.Name)" @onclick="AddWmiEntryAsync">
+                                        <i class="ti ti-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-file-search"></i>Collect configuration (Recherche de fichier)</div>
+
+                            @if (_collect.FileSearchEntries.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th>Chemin</th>
+                                                <th>Motif</th>
+                                                <th>Récursif</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (CollectFileSearchEntry entry in _collect.FileSearchEntries)
+                                            {
+                                                <tr>
+                                                    <td>@entry.Name</td>
+                                                    <td>@entry.Path</td>
+                                                    <td>@entry.Pattern</td>
+                                                    <td>@(entry.Recursive ? "Oui" : "Non")</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveFileSearchEntryAsync(entry)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label">Nom</label>
+                                    <input class="form-control" @bind="_newFileSearchEntry.Name" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Chemin</label>
+                                    <input class="form-control" @bind="_newFileSearchEntry.Path" placeholder="C:\Program Files\..." />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Motif</label>
+                                    <input class="form-control" @bind="_newFileSearchEntry.Pattern" placeholder="*.log" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-check-label d-block">Récursif</label>
+                                    <input class="form-check-input" type="checkbox" @bind="_newFileSearchEntry.Recursive" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newFileSearchEntry.Name)" @onclick="AddFileSearchEntryAsync">
+                                        <i class="ti ti-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    break;
+            }
+        </div>
+    </div>
+}

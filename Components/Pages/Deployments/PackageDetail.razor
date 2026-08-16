@@ -1,0 +1,508 @@
+@page "/tools/deployments/package/{PackageId:int}"
+@using GlpiNg.Modules.Abstractions.Deployment
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_package?.Name ?? "Paquet")</PageTitle>
+
+<DeploymentTopMenu Current="packages" />
+
+@if (_package is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-package-off fs-1"></i>
+        <p class="mt-2">Ce paquet de déploiement est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-topbar">
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-package"></i>
+            <span>Paquet - @_package.Name - ID @_package.Id</span>
+        </div>
+    </div>
+
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            @foreach (var tab in _tabs)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                    <i class="ti @tab.Icon"></i>
+                    <span>@tab.Label</span>
+                    @if (tab.Count is { } count)
+                    {
+                        <span class="glpi-fiche-tab-count">@count</span>
+                    }
+                </button>
+            }
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "paquet":
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Nom</label>
+                                <input class="form-control" @bind="_package.Name" @bind:event="oninput" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Commentaires</label>
+                                <textarea class="form-control" rows="6" @bind="_package.Description"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Activer le déploiement à la demande pour le groupe suivant :</label>
+                                <select class="form-select" @bind="_package.DeployComputerGroupId" @bind:after="RebuildTabs">
+                                    <option value="">-----</option>
+                                    @foreach (DeployComputerGroup group in _computerGroups)
+                                    {
+                                        <option value="@group.Id">@group.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Remplacé par</label>
+                                <select class="form-select" @bind="_package.SupersededByPackageId">
+                                    <option value="">-----</option>
+                                    @foreach (DeploymentPackage other in _otherPackages)
+                                    {
+                                        <option value="@other.Id">@other.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            @if (_package.SupersededByPackageId is not null)
+                            {
+                                <div class="alert alert-warning mt-2 mb-0 py-2">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Ce paquet est remplacé : il n'est plus proposé pour le déploiement à la demande,
+                                    même si un groupe est configuré ci-dessus.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                        </button>
+                        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                        </button>
+                    </div>
+                    break;
+
+                case "content":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-list-check"></i>Audits (@_checks.Count)</div>
+
+                        <div class="glpi-fiche-block-body">
+                            @if (_checks.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Chemin / clef</th>
+                                                <th>Valeur</th>
+                                                <th>Si échec</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeploymentCheckEntry check in _checks)
+                                            {
+                                                <tr>
+                                                    <td>@CheckTypeLabel(check.Type)</td>
+                                                    <td>@check.Path</td>
+                                                    <td>@(check.Value ?? "—")</td>
+                                                    <td>@(check.OnFailure == DeploymentCheckOnFailure.Continue ? "Continuer" : "Sauter le job")</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveCheckAsync(check)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="glpi-fiche-add-row">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-select" @bind="_newCheck.Type">
+                                            @foreach (DeploymentCheckType type in Enum.GetValues<DeploymentCheckType>())
+                                            {
+                                                <option value="@type">@CheckTypeLabel(type)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Chemin / clef</label>
+                                        <input class="form-control" @bind="_newCheck.Path" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Valeur</label>
+                                        <input class="form-control" @bind="_newCheck.Value" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Si échec</label>
+                                        <select class="form-select" @bind="_newCheck.OnFailure">
+                                            <option value="@DeploymentCheckOnFailure.SkipJob">Sauter le job</option>
+                                            <option value="@DeploymentCheckOnFailure.Continue">Continuer</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newCheck.Path)" @onclick="AddCheckAsync">
+                                            <i class="ti ti-plus me-1"></i>Ajouter
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-files"></i>Fichiers (@_package.Files.Count)</div>
+
+                        <div class="glpi-fiche-block-body">
+                            @if (_package.Files.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th>SHA-512</th>
+                                                <th>Taille</th>
+                                                <th title="Nombre de fragments stockés pour ce fichier (téléchargement/vérification fragment par fragment côté agent)">Fragments</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeploymentPackageFile file in _package.Files)
+                                            {
+                                                <tr>
+                                                    <td>@file.FileName</td>
+                                                    <td class="text-truncate" style="max-width: 220px;" title="@file.Sha512">@file.Sha512</td>
+                                                    <td>@FormatSize(file.SizeBytes)</td>
+                                                    <td>@file.Parts.Count</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveFileAsync(file)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="glpi-fiche-add-row">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <input type="file" id="@FileInputElementId" class="form-control" multiple disabled="@_isUploading" />
+                                    <button type="button" class="btn btn-primary text-nowrap flex-shrink-0" disabled="@_isUploading" @onclick="StartUploadAsync">
+                                        <i class="ti ti-upload me-1"></i>Ajouter
+                                    </button>
+                                </div>
+
+                                @if (_isUploading)
+                                {
+                                    <div class="mt-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-secondary small text-truncate" style="max-width: 70%;">
+                                                <i class="ti ti-loader-2 me-1"></i>@(_currentFileName ?? "Préparation…") (@(_uploadedCount + 1)/@_totalToUpload)
+                                            </span>
+                                            <span class="text-secondary small">@($"{_currentFileProgress:0}%")</span>
+                                        </div>
+                                        <div class="glpi-upload-progress">
+                                            <div class="glpi-upload-progress-fill" style="width: @(_currentFileProgress.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-terminal-2"></i>Actions (@_actions.Count)</div>
+
+                        <div class="glpi-fiche-block-body">
+                            @if (_actions.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 3rem;">#</th>
+                                                <th>Type</th>
+                                                <th>Libellé</th>
+                                                <th>Détail</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeploymentActionEntry action in _actions)
+                                            {
+                                                int index = _actions.IndexOf(action);
+                                                <tr>
+                                                    <td class="text-secondary">@(index + 1)</td>
+                                                    <td>@ActionTypeLabel(action.Type)</td>
+                                                    <td>@action.Label</td>
+                                                    <td>@ActionSummary(action)</td>
+                                                    <td class="text-end">
+                                                        <div class="btn-list justify-content-end flex-nowrap">
+                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == 0)" @onclick="() => MoveActionAsync(action, -1)" title="Monter">
+                                                                <i class="ti ti-arrow-up"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == _actions.Count - 1)" @onclick="() => MoveActionAsync(action, 1)" title="Descendre">
+                                                                <i class="ti ti-arrow-down"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveActionAsync(action)" title="Supprimer">
+                                                                <i class="ti ti-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-secondary small mb-3">Les actions s'exécutent dans l'ordre défini ci-dessus.</p>
+                            }
+
+                            <div class="glpi-fiche-add-row">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-2">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-select" @bind="_newAction.Type">
+                                            @foreach (DeploymentActionType type in Enum.GetValues<DeploymentActionType>())
+                                            {
+                                                <option value="@type">@ActionTypeLabel(type)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Libellé</label>
+                                        <input class="form-control" @bind="_newAction.Label" />
+                                    </div>
+
+                                    @if (_newAction.Type == DeploymentActionType.Command)
+                                    {
+                                        <div class="col-md-4">
+                                            <label class="form-label">Commande à exécuter</label>
+                                            <input class="form-control" @bind="_newAction.Command" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Code de retour attendu</label>
+                                            <input type="number" class="form-control" @bind="_newAction.ExpectedReturnCode" />
+                                        </div>
+                                    }
+                                    else if (_newAction.Type is DeploymentActionType.Move or DeploymentActionType.Copy)
+                                    {
+                                        <div class="col-md-3">
+                                            <label class="form-label">Depuis</label>
+                                            <input class="form-control" @bind="_newAction.From" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Vers</label>
+                                            <input class="form-control" @bind="_newAction.To" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-4">
+                                            <label class="form-label">Répertoire</label>
+                                            <input class="form-control" @bind="_newAction.Path" />
+                                        </div>
+                                    }
+
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" disabled="@(!CanAddAction)" @onclick="AddActionAsync">
+                                            <i class="ti ti-plus me-1"></i>Ajouter
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-message-2-question"></i>Interactions utilisateur (@_interactions.Count)</div>
+
+                        <div class="glpi-fiche-block-body">
+                            @if (_interactions.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Texte</th>
+                                                <th>Ignorable</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeploymentUserInteractionEntry interaction in _interactions)
+                                            {
+                                                <tr>
+                                                    <td>@InteractionTypeLabel(interaction.Type)</td>
+                                                    <td>@interaction.Text</td>
+                                                    <td>@(interaction.AllowSkip ? "Oui" : "Non")</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveInteractionAsync(interaction)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="glpi-fiche-add-row">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-select" @bind="_newInteraction.Type">
+                                            @foreach (DeploymentUserInteractionType type in Enum.GetValues<DeploymentUserInteractionType>())
+                                            {
+                                                <option value="@type">@InteractionTypeLabel(type)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Texte affiché à l'utilisateur</label>
+                                        <input class="form-control" @bind="_newInteraction.Text" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-check-label d-block">Ignorable</label>
+                                        <input class="form-check-input" type="checkbox" @bind="_newInteraction.AllowSkip" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newInteraction.Text)" @onclick="AddInteractionAsync">
+                                            <i class="ti ti-plus me-1"></i>Ajouter
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    break;
+
+                case "cibles":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-target-arrow"></i>Cibles pour le déploiement à la demande (@_package.Targets.Count)</div>
+
+                        <div class="glpi-fiche-block-body">
+                            @if (_package.SupersededByPackageId is not null)
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Ce paquet est remplacé par « @SupersededByPackageName » : les cibles
+                                    ci-dessous ne sont plus prises en compte pour le déploiement à la demande.
+                                </div>
+                            }
+
+                            <div class="glpi-fiche-field mb-3" style="max-width: 320px;">
+                                <label>Ajouter une cible pour le self-service</label>
+                                <select class="form-select" value="" @onchange="AddTargetAsync">
+                                    <option value="">-----</option>
+                                    <optgroup label="Entité">
+                                        @foreach (DeploymentTargetOption entity in _entities)
+                                        {
+                                            <option value="entity:@entity.Id">@entity.Name</option>
+                                        }
+                                    </optgroup>
+                                    <optgroup label="Groupe">
+                                        @foreach (DeploymentTargetOption group in _groups)
+                                        {
+                                            <option value="group:@group.Id">@group.Name</option>
+                                        }
+                                    </optgroup>
+                                    <optgroup label="Profil">
+                                        @foreach (DeploymentTargetOption profile in _profiles)
+                                        {
+                                            <option value="profile:@profile.Id">@profile.Name</option>
+                                        }
+                                    </optgroup>
+                                    <optgroup label="Utilisateur">
+                                        @foreach (DeploymentTargetOption user in _users)
+                                        {
+                                            <option value="user:@user.Id">@user.Name</option>
+                                        }
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            @if (_package.Targets.Count > 0)
+                            {
+                                <div class="d-flex justify-content-end mb-2">
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                                                disabled="@(_selectedTargetIds.Count == 0)">
+                                            <i class="ti ti-trash me-1"></i>Actions
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                                            <p class="mb-2">Supprimer @_selectedTargetIds.Count cible(s) sélectionnée(s) ?</p>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button type="button" class="btn btn-sm">Annuler</button>
+                                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedTargetsAsync">Supprimer</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 2.5rem;">
+                                                    <input class="form-check-input m-0" type="checkbox" checked="@AllTargetsSelected"
+                                                           @onchange="@((ChangeEventArgs e) => ToggleSelectAllTargets((bool)(e.Value ?? false)))" />
+                                                </th>
+                                                <th>Type</th>
+                                                <th>Destinataires</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeploymentPackageTarget target in _package.Targets)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <input class="form-check-input m-0" type="checkbox" checked="@_selectedTargetIds.Contains(target.Id)"
+                                                               @onchange="@((ChangeEventArgs e) => ToggleSelectTarget(target.Id, (bool)(e.Value ?? false)))" />
+                                                    </td>
+                                                    <td>@TargetTypeLabel(target.Type)</td>
+                                                    <td>@TargetRecipientLabel(target)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-secondary mb-0">Aucune cible : ce paquet n'est pas proposé en self-service.</p>
+                            }
+                        </div>
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+}

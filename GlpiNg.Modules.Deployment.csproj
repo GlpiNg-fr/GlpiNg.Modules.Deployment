@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GlpiNg.Modules.Deployment</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Permet d'utiliser les types ASP.NET Core (ControllerBase, ApiController, composants
+      Razor...) dans cette bibliothèque de classes sans dépendre du projet hôte GlpiNg.Web.
+    -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Uniquement les abstractions EF Core (DbContext, DbSet<T>) : ce module ne
+      connaît pas le fournisseur (Sqlite/SqlServer) ni le DbContext concret, qui
+      restent la responsabilité du projet hôte. Voir Controllers/DeploymentPackageFilesController.cs
+      et Components/Pages/Deployments/*.razor.cs.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <!-- AsSplitQuery() éventuel vit dans le provider relationnel plutôt que dans le
+         paquet EF Core de base — même raison que GlpiNg.Modules.Inventory.csproj. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
+    <!-- Composant ToastService (confirmations/erreurs de formulaire), consommé par
+         Components/Pages/Deployments/Detail.razor.cs — même paquet que GlpiNg.Web. -->
+    <PackageReference Include="Blazor.Bootstrap" Version="3.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Contrairement à Inventory (qui ne dépend que d'Abstractions), ce module référence
+      aussi Inventory directement : DeploymentJob, DeployComputerGroupMember,
+      DeployGroupCriteriaEvaluator et la plupart des pages Razor manipulent les types
+      Computer/GlpiAgent d'Inventory, pas de simples clés étrangères. Le sens de
+      dépendance reste cohérent avec IComputerDeploymentTasksProvider (Abstractions) :
+      Inventory ne dépend jamais de Deployment, mais l'inverse est acceptable.
+    -->
+    <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
+  </ItemGroup>
+
+</Project>

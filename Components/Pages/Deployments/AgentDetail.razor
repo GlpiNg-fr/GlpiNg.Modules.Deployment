@@ -1,0 +1,181 @@
+@page "/tools/deployments/agent/{AgentId:int}"
+@using GlpiNg.Modules.Inventory.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_agent is null ? "Agent" : AgentDisplayName(_agent))</PageTitle>
+
+<DeploymentTopMenu Current="agents" />
+
+@if (_agent is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-cpu-off fs-1"></i>
+        <p class="mt-2">Cet agent est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-topbar">
+        <a class="glpi-fiche-pager-btn" href="/tools/deployments/agent" title="Retour à la liste">
+            <i class="ti ti-list"></i>
+        </a>
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-cpu"></i>
+            <span>Agent - @AgentDisplayName(_agent) - ID @_agent.Id</span>
+        </div>
+        <div class="glpi-fiche-toolbar">
+            @if (_total > 0)
+            {
+                <span class="glpi-fiche-pager-count">@_position/@_total</span>
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/tools/deployments/agent/{prevId}" : "#")">
+                    <i class="ti ti-chevron-left"></i>
+                </a>
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/tools/deployments/agent/{nextId}" : "#")">
+                    <i class="ti ti-chevron-right"></i>
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            @foreach (var tab in _tabs)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                    <i class="ti @tab.Icon"></i>
+                    <span>@tab.Label</span>
+                    @if (tab.Count is { } count)
+                    {
+                        <span class="glpi-fiche-tab-count">@count</span>
+                    }
+                </button>
+            }
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "agent":
+                    <EditForm Model="_agent" OnValidSubmit="SaveAsync">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Nom</label>
+                                    <input class="form-control" @bind="_agent.AgentName" @bind:event="oninput" />
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Étiquette (tag)</label>
+                                    <input class="form-control" @bind="_agent.Tag" @bind:event="oninput" />
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Élément lié</label>
+                                    @if (_agent.Computer is { } linkedComputer)
+                                    {
+                                        <div class="d-flex align-items-center justify-content-between glpi-fiche-value-box">
+                                            <a href="@($"/parc/computer/{linkedComputer.Id}")" class="text-reset fw-semibold">
+                                                <i class="ti ti-device-desktop me-1 text-secondary"></i>@linkedComputer.Name
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="UnlinkComputerAsync">
+                                                <i class="ti ti-plug-connected-x me-1"></i>Déconnecter
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select" @bind="_computerIdToLink">
+                                                <option value="0">-- Choisir un ordinateur --</option>
+                                                @foreach (Computer computer in _availableComputers)
+                                                {
+                                                    <option value="@computer.Id">@computer.Name</option>
+                                                }
+                                            </select>
+                                            <button type="button" class="btn btn-primary text-nowrap" disabled="@(_computerIdToLink == 0)" @onclick="LinkComputerAsync">
+                                                <i class="ti ti-plug-connected me-1"></i>Connecter
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>ID matériel (deviceid)</label>
+                                    <div class="glpi-fiche-value-box"><code>@(_agent.DeviceId ?? "—")</code></div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>UUID agent</label>
+                                    <div class="glpi-fiche-value-box"><code>@_agent.AgentUuid</code></div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Nom d'hôte</label>
+                                    <div class="glpi-fiche-value-box">@(_agent.Hostname ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Version de l'agent</label>
+                                    <div class="glpi-fiche-value-box">@(_agent.AgentVersion ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>UserAgent</label>
+                                    <div class="glpi-fiche-value-box">@(_agent.LastUserAgent ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Adresse de dernier contact</label>
+                                    <div class="glpi-fiche-value-box">@(_agent.LastContactIp ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Premier contact</label>
+                                    <div class="glpi-fiche-value-box">@_agent.FirstContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Dernier contact</label>
+                                    <div class="glpi-fiche-value-box">@_agent.LastContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            </button>
+                        </div>
+                    </EditForm>
+                    break;
+
+                case "tasks":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-list-check"></i>Tâches installées</div>
+                        @if (_agent.InstalledTasks.Length == 0)
+                        {
+                            <div class="glpi-config-placeholder">
+                                <i class="ti ti-list-check"></i>
+                                <p class="mb-0">Aucune tâche installée signalée.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (string task in _agent.InstalledTasks)
+                                {
+                                    <span class="badge @(_agent.EnabledTasks.Contains(task) ? "bg-green-lt" : "bg-secondary-lt")">
+                                        @TaskLabel(task)@(_agent.EnabledTasks.Contains(task) ? "" : " (désactivée)")
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    break;
+
+                default:
+                    var current = _tabs.First(t => t.Key == _activeTabKey);
+                    <div class="glpi-config-placeholder">
+                        <i class="ti @current.Icon"></i>
+                        <p class="mb-0">L'onglet « @current.Label » n'est pas encore disponible.</p>
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+}

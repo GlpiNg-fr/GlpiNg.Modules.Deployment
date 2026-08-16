@@ -1,0 +1,55 @@
+@page "/tools/deployments"
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="dashboard" />
+
+<div class="row row-cards">
+    @foreach (StatCard card in _cards)
+    {
+        <div class="glpi-dashboard-card-col">
+            <div class="card glpi-dashboard-card">
+                <div class="card-body">
+                    @if (card.Href is not null)
+                    {
+                        <a href="@card.Href" class="stretched-link" aria-label="@card.Title"></a>
+                    }
+                    <div class="d-flex align-items-center">
+                        <span class="@card.BadgeClass text-white avatar me-3"><i class="ti @card.Icon"></i></span>
+                        <div class="flex-fill">
+                            <div class="text-secondary">@card.Title</div>
+                            <div class="h2 mb-0">@card.Value</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-list-check me-1"></i>Tâches de déploiement par statut</h3>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col">
+                <div class="text-secondary">En attente</div>
+                <div class="h3 mb-0">@_pendingJobs</div>
+            </div>
+            <div class="col">
+                <div class="text-secondary">En cours</div>
+                <div class="h3 mb-0">@_runningJobs</div>
+            </div>
+            <div class="col">
+                <div class="text-secondary">Réussies</div>
+                <div class="h3 mb-0 text-success">@_successJobs</div>
+            </div>
+            <div class="col">
+                <div class="text-secondary">En erreur</div>
+                <div class="h3 mb-0 text-danger">@_errorJobs</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+@page "/tools/deployments/agent"
+@using GlpiNg.Modules.Inventory.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Agents</PageTitle>
+
+<DeploymentTopMenu Current="agents" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header">
+        <div class="input-icon" style="max-width: 320px;">
+            <span class="input-icon-addon">
+                <i class="ti ti-search"></i>
+            </span>
+            <input type="text" class="form-control" placeholder="Rechercher un agent..."
+                   @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Élément associé</th>
+                    <th>Tag</th>
+                    <th>Version de l'agent</th>
+                    <th>Deviceid</th>
+                    <th>Dernier contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredAgents.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">Aucun agent trouvé.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (GlpiAgent agent in _filteredAgents)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@($"/tools/deployments/agent/{agent.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-cpu me-1 text-secondary"></i>@AgentDisplayName(agent)
+                                </a>
+                            </td>
+                            <td>
+                                @if (agent.Computer is { } computer)
+                                {
+                                    <a href="@($"/parc/computer/{computer.Id}")" class="text-reset">
+                                        <i class="ti ti-device-desktop me-1 text-secondary"></i>@computer.Name
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                            </td>
+                            <td>@(agent.Tag ?? "—")</td>
+                            <td>@(agent.AgentVersion ?? "—")</td>
+                            <td>@(agent.DeviceId ?? "—")</td>
+                            <td>@LastContactLabel(agent)</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

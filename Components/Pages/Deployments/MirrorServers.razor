@@ -1,0 +1,127 @@
+@page "/tools/deployments/mirrors"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="mirrors" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <label class="form-check m-0 px-2" title="Tout sélectionner">
+            <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                   @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+        </label>
+
+        <div class="btn-list align-items-center">
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count serveur(s) miroir(s) sélectionné(s) ?</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newMirrorServerModal">
+                <i class="ti ti-plus me-1"></i>Nouveau serveur miroir
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th>Nom</th>
+                    <th>URL</th>
+                    <th>Commentaires</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_mirrorServers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aucun serveur miroir.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (DeploymentMirrorServer server in _mirrorServers)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(server.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(server.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/tools/deployments/mirrors/{server.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-server-2 me-1 text-secondary"></i>@server.Name
+                                </a>
+                            </td>
+                            <td>@server.Url</td>
+                            <td>@(server.Comment ?? "—")</td>
+                            <td>
+                                @if (server.IsActive)
+                                {
+                                    <span class="badge bg-success-lt">Actif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">Inactif</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newMirrorServerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-server-2 me-2"></i>Nouvel élément - Serveur miroir</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="glpi-fiche-field">
+                    <label>Nom</label>
+                    <input class="form-control" @bind="_newMirrorServer.Name" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>URL</label>
+                    <input type="url" class="form-control" placeholder="https://miroir.exemple.local/deploy" @bind="_newMirrorServer.Url" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Commentaires</label>
+                    <textarea class="form-control" rows="3" @bind="_newMirrorServer.Comment"></textarea>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="newMirrorServerActive" @bind="_newMirrorServer.IsActive" />
+                    <label class="form-check-label" for="newMirrorServerActive">Actif</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@(string.IsNullOrWhiteSpace(_newMirrorServer.Name) || string.IsNullOrWhiteSpace(_newMirrorServer.Url))" @onclick="CreateMirrorServerAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,285 @@
+@page "/tools/deployments/computer-groups/{GroupId:int}"
+@using GlpiNg.Modules.Inventory.Models
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_group?.Name ?? "Groupe d'ordinateurs")</PageTitle>
+
+<DeploymentTopMenu Current="computergroups" />
+
+@if (_group is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-devices-off fs-1"></i>
+        <p class="mt-2">Ce groupe d'ordinateurs est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+                <i class="ti ti-devices"></i>
+                <span>Groupe d'inventaire</span>
+            </button>
+            @if (_group.Type == DeployComputerGroupType.Dynamic)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
+                    <i class="ti ti-filter"></i>
+                    <span>Critères</span>
+                    <span class="glpi-fiche-tab-count">@_group.Criteria.Count</span>
+                </button>
+            }
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "members" ? "active" : "")" @onclick='() => SetTab("members")'>
+                <i class="ti ti-list"></i>
+                <span>Éléments rattachés</span>
+                <span class="glpi-fiche-tab-count">@(_group.Type == DeployComputerGroupType.Dynamic ? _dynamicMatches.Count : _group.Members.Count)</span>
+            </button>
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "main":
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Nom</label>
+                                <input class="form-control" @bind="_group.Name" @bind:event="oninput" />
+                            </div>
+                            <div class="glpi-fiche-field">
+                                <label>Type</label>
+                                <select class="form-select" @bind="_group.Type">
+                                    <option value="@DeployComputerGroupType.Static">Groupe statique</option>
+                                    <option value="@DeployComputerGroupType.Dynamic">Groupe dynamique</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Commentaires</label>
+                                <textarea class="form-control" rows="4" @bind="_group.Comment"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                        </button>
+                        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                        </button>
+                    </div>
+                    break;
+
+                case "criteria":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_group.Criteria.Count)</div>
+                        <p class="text-secondary">
+                            Un ordinateur appartient au groupe si l'ensemble des critères ci-dessous, combinés dans
+                            l'ordre via ET/OU, est vérifié. Sans critère, le groupe ne contient aucun ordinateur.
+                        </p>
+
+                        @if (_group.Criteria.Count > 0)
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Lien</th>
+                                            <th>Champ</th>
+                                            <th>Opérateur</th>
+                                            <th>Valeur</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (DeployComputerGroupCriterion criterion in _group.Criteria.OrderBy(c => c.SortOrder))
+                                        {
+                                            <tr>
+                                                <td>@(criterion.SortOrder == 0 ? "—" : LinkLabel(criterion.Link))</td>
+                                                <td>@FieldLabel(criterion.Field)</td>
+                                                <td>@OperatorLabel(criterion.Operator)</td>
+                                                <td>@(criterion.Operator == DeployCriterionOperator.IsEmpty ? "—" : criterion.Value)</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveCriterionAsync(criterion)">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label">Lien</label>
+                                <select class="form-select" @bind="_newCriterion.Link" disabled="@(_group.Criteria.Count == 0)">
+                                    <option value="@DeployCriterionLink.And">ET</option>
+                                    <option value="@DeployCriterionLink.Or">OU</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Champ</label>
+                                <select class="form-select" @bind="_newCriterion.Field" @bind:after="OnCriterionFieldChanged">
+                                    @foreach (DeployCriterionField field in Enum.GetValues<DeployCriterionField>())
+                                    {
+                                        <option value="@field">@FieldLabel(field)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Opérateur</label>
+                                <select class="form-select" @bind="_newCriterion.Operator" @bind:after="OnCriterionOperatorChanged">
+                                    @foreach (DeployCriterionOperator op in Enum.GetValues<DeployCriterionOperator>())
+                                    {
+                                        <option value="@op">@OperatorLabel(op)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Valeur</label>
+                                @if (_newCriterion.Operator == DeployCriterionOperator.IsEmpty)
+                                {
+                                    <input class="form-control" disabled placeholder="—" />
+                                }
+                                else if (_newCriterion.Field == DeployCriterionField.Status)
+                                {
+                                    <select class="form-select" @bind="_newCriterion.Value">
+                                        <option value="">-----</option>
+                                        @foreach (ComputerStatus status in Enum.GetValues<ComputerStatus>())
+                                        {
+                                            <option value="@status">@StatusOptionLabel(status)</option>
+                                        }
+                                    </select>
+                                }
+                                else if (_newCriterion.Operator is DeployCriterionOperator.Is or DeployCriterionOperator.IsNot
+                                    && _distinctValuesCache.TryGetValue(_newCriterion.Field, out List<string>? distinctValues))
+                                {
+                                    <select class="form-select" @bind="_newCriterion.Value">
+                                        <option value="">-----</option>
+                                        @foreach (string value in distinctValues)
+                                        {
+                                            <option value="@value">@value</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input class="form-control" @bind="_newCriterion.Value" />
+                                }
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-primary w-100" @onclick="AddCriterionAsync">
+                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    break;
+
+                case "members":
+                    @if (_group.Type == DeployComputerGroupType.Dynamic)
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_dynamicMatches.Count)</div>
+
+                            @if (_group.Criteria.Count == 0)
+                            {
+                                <div class="glpi-config-placeholder">
+                                    <i class="ti ti-filter"></i>
+                                    <p class="mb-0">Ajoutez au moins un critère dans l'onglet « Critères » pour peupler ce groupe.</p>
+                                </div>
+                            }
+                            else if (_dynamicMatches.Count == 0)
+                            {
+                                <div class="glpi-config-placeholder">
+                                    <i class="ti ti-list-search"></i>
+                                    <p class="mb-0">Aucun ordinateur ne correspond actuellement à ces critères.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive mb-0">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (Computer computer in _dynamicMatches)
+                                            {
+                                                <tr>
+                                                    <td><a href="@($"/parc/computer/{computer.Id}")">@computer.Name</a></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs (@_group.Members.Count)</div>
+
+                            @if (_group.Members.Count > 0)
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DeployComputerGroupMember member in _group.Members.OrderBy(m => m.Computer?.Name))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @if (member.Computer is not null)
+                                                        {
+                                                            <a href="@($"/parc/computer/{member.Computer.Id}")">@member.Computer.Name</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-secondary">—</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveMemberAsync(member)">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2">
+                                <select class="form-select" style="max-width: 320px;" @bind="_computerIdToAdd">
+                                    <option value="0">-- Choisir un ordinateur --</option>
+                                    @foreach (Computer computer in _availableComputers)
+                                    {
+                                        <option value="@computer.Id">@computer.Name</option>
+                                    }
+                                </select>
+                                <button type="button" class="btn btn-primary" disabled="@(_computerIdToAdd == 0)" @onclick="AddMemberAsync">
+                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    break;
+            }
+        </div>
+    </div>
+}

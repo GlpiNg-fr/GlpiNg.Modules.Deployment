@@ -1,0 +1,117 @@
+@page "/tools/deployments/computer-groups"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="computergroups" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <label class="form-check m-0 px-2" title="Tout sélectionner">
+            <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                   @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+        </label>
+
+        <div class="btn-list align-items-center">
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count groupe(s) sélectionné(s) ?</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newComputerGroupModal">
+                <i class="ti ti-plus me-1"></i>Nouveau groupe
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Commentaires</th>
+                    <th>Ordinateurs</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_groups.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aucun groupe d'ordinateurs.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (DeployComputerGroup group in _groups)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(group.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(group.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/tools/deployments/computer-groups/{group.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-devices me-1 text-secondary"></i>@group.Name
+                                </a>
+                            </td>
+                            <td>@TypeLabel(group.Type)</td>
+                            <td>@(group.Comment ?? "—")</td>
+                            <td>@group.Members.Count</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newComputerGroupModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-devices me-2"></i>Nouvel élément - Groupe d'inventaire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="glpi-fiche-field">
+                    <label>Nom</label>
+                    <input class="form-control" @bind="_newGroup.Name" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Type</label>
+                    <select class="form-select" @bind="_newGroup.Type">
+                        <option value="@DeployComputerGroupType.Static">Groupe statique</option>
+                        <option value="@DeployComputerGroupType.Dynamic">Groupe dynamique</option>
+                    </select>
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Commentaires</label>
+                    <textarea class="form-control" rows="3" @bind="_newGroup.Comment"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@string.IsNullOrWhiteSpace(_newGroup.Name)" @onclick="CreateGroupAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

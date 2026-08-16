@@ -1,0 +1,83 @@
+@page "/tools/deployments/supervision"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="supervision" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <span class="text-secondary">@_jobs.Count exécution(s) de tâche de déploiement</span>
+        <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+            <i class="ti ti-refresh"></i>
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Paquet</th>
+                    <th>Agent</th>
+                    <th>Statut</th>
+                    <th>Créé le</th>
+                    <th>Démarré le</th>
+                    <th>Terminé le</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_jobs.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-4">Aucune exécution de tâche de déploiement.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (DeploymentJob job in _jobs)
+                    {
+                        <tr>
+                            <td>@job.Id</td>
+                            <td>
+                                @if (job.Package is not null)
+                                {
+                                    <a href="@($"/tools/deployments/package/{job.Package.Id}")">@job.Package.Name</a>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                            </td>
+                            <td>@(job.Agent?.AgentName ?? job.Agent?.DeviceId ?? job.Agent?.Hostname ?? "—")</td>
+                            <td><span class="badge @StatusBadgeClass(job.Status)">@StatusLabel(job.Status)</span></td>
+                            <td>@job.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(job.StartedAt is { } started ? started.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                            <td>@(job.CompletedAt is { } completed ? completed.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                            <td class="text-end">
+                                @if (!string.IsNullOrWhiteSpace(job.Log))
+                                {
+                                    <button type="button" class="btn btn-sm" @onclick="() => ToggleLog(job.Id)">
+                                        <i class="ti ti-file-text me-1"></i>Journal
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        @if (_expandedJobId == job.Id && !string.IsNullOrWhiteSpace(job.Log))
+                        {
+                            <tr>
+                                <td colspan="8">
+                                    <pre class="mb-0 p-2 bg-body-secondary rounded">@job.Log</pre>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

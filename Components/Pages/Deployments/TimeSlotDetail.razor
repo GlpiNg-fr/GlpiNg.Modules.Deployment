@@ -1,0 +1,105 @@
+@page "/tools/deployments/timeslots/{TimeSlotId:int}"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_timeSlot?.Name ?? "Créneau horaire")</PageTitle>
+
+<DeploymentTopMenu Current="timeslots" />
+
+@if (_timeSlot is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-calendar-off fs-1"></i>
+        <p class="mt-2">Ce créneau horaire est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-block">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="glpi-fiche-field">
+                    <label>Nom</label>
+                    <input class="form-control" @bind="_timeSlot.Name" @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glpi-fiche-field">
+                    <label>Commentaires</label>
+                    <textarea class="form-control" rows="2" @bind="_timeSlot.Comment"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+            </button>
+            <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+            </button>
+        </div>
+    </div>
+
+    <div class="glpi-fiche-block">
+        <div class="glpi-fiche-block-title"><i class="ti ti-clock"></i>Entrées (@_timeSlot.Entries.Count)</div>
+
+        @if (_timeSlot.Entries.Count > 0)
+        {
+            <div class="table-responsive mb-3">
+                <table class="table table-vcenter card-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Jour</th>
+                            <th>Début</th>
+                            <th>Fin</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (TimeSlotEntry entry in _timeSlot.Entries.OrderBy(e => (int)e.DayOfWeek == 0 ? 7 : (int)e.DayOfWeek).ThenBy(e => e.StartTime))
+                        {
+                            <tr>
+                                <td>@DayLabel(entry.DayOfWeek)</td>
+                                <td>@entry.StartTime.ToString("HH:mm")</td>
+                                <td>@entry.EndTime.ToString("HH:mm")</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveEntryAsync(entry)">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Jour</label>
+                <select class="form-select" @bind="_newDay">
+                    <option value="@DayOfWeek.Monday">Lundi</option>
+                    <option value="@DayOfWeek.Tuesday">Mardi</option>
+                    <option value="@DayOfWeek.Wednesday">Mercredi</option>
+                    <option value="@DayOfWeek.Thursday">Jeudi</option>
+                    <option value="@DayOfWeek.Friday">Vendredi</option>
+                    <option value="@DayOfWeek.Saturday">Samedi</option>
+                    <option value="@DayOfWeek.Sunday">Dimanche</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Heure de début</label>
+                <input type="time" class="form-control" @bind="_newStart" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Heure de fin</label>
+                <input type="time" class="form-control" @bind="_newEnd" />
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary w-100" @onclick="AddEntryAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+}
