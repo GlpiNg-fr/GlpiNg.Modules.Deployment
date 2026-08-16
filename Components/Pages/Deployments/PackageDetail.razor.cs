@@ -62,6 +62,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
     private DeploymentCheckEntry _newCheck = new();
     private DeploymentActionEntry _newAction = new();
+    private DeploymentActionEntry? _editingActionEntry;
     private DeploymentUserInteractionEntry _newInteraction = new();
 
     private bool CanAddAction => _newAction.Type switch
@@ -82,6 +83,8 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
         _loadedPackageId = PackageId;
         _activeTabKey = "paquet";
+        _editingActionEntry = null;
+        _newAction = new DeploymentActionEntry();
 
         if (_db is not null)
         {
@@ -352,20 +355,64 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
     // --- Actions ---
 
-    private async Task AddActionAsync()
+    /// <summary>Charge <paramref name="entry"/> (une copie, pas la référence) dans le formulaire
+    /// d'ajout pour l'éditer ; <see cref="SaveActionAsync"/> la réinjecte ensuite à sa place dans
+    /// <see cref="_actions"/> plutôt que de l'ajouter en fin de liste.</summary>
+    private void EditAction(DeploymentActionEntry entry)
+    {
+        _editingActionEntry = entry;
+        _newAction = new DeploymentActionEntry
+        {
+            Type = entry.Type,
+            Label = entry.Label,
+            Command = entry.Command,
+            LogLineLimit = entry.LogLineLimit,
+            ExpectedReturnCode = entry.ExpectedReturnCode,
+            From = entry.From,
+            To = entry.To,
+            Path = entry.Path
+        };
+    }
+
+    private void CancelEditAction()
+    {
+        _editingActionEntry = null;
+        _newAction = new DeploymentActionEntry();
+    }
+
+    private async Task SaveActionAsync()
     {
         if (_package is null || !CanAddAction)
         {
             return;
         }
 
-        _actions.Add(_newAction);
+        if (_editingActionEntry is not null)
+        {
+            int index = _actions.IndexOf(_editingActionEntry);
+            if (index >= 0)
+            {
+                _actions[index] = _newAction;
+            }
+
+            _editingActionEntry = null;
+        }
+        else
+        {
+            _actions.Add(_newAction);
+        }
+
         _newAction = new DeploymentActionEntry();
         await PersistEntriesAsync();
     }
 
     private async Task RemoveActionAsync(DeploymentActionEntry entry)
     {
+        if (ReferenceEquals(entry, _editingActionEntry))
+        {
+            CancelEditAction();
+        }
+
         _actions.Remove(entry);
         await PersistEntriesAsync();
     }

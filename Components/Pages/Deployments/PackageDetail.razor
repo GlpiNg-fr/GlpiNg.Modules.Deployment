@@ -257,20 +257,24 @@ else
                                             @foreach (DeploymentActionEntry action in _actions)
                                             {
                                                 int index = _actions.IndexOf(action);
-                                                <tr>
+                                                bool isEditing = ReferenceEquals(action, _editingActionEntry);
+                                                <tr class="@(isEditing ? "table-active" : "")">
                                                     <td class="text-secondary">@(index + 1)</td>
                                                     <td>@ActionTypeLabel(action.Type)</td>
                                                     <td>@action.Label</td>
                                                     <td>@ActionSummary(action)</td>
                                                     <td class="text-end">
                                                         <div class="btn-list justify-content-end flex-nowrap">
+                                                            <button type="button" class="btn btn-sm btn-icon" @onclick="() => EditAction(action)" title="Modifier">
+                                                                <i class="ti ti-pencil"></i>
+                                                            </button>
                                                             <button type="button" class="btn btn-sm btn-icon" disabled="@(index == 0)" @onclick="() => MoveActionAsync(action, -1)" title="Monter">
                                                                 <i class="ti ti-arrow-up"></i>
                                                             </button>
                                                             <button type="button" class="btn btn-sm btn-icon" disabled="@(index == _actions.Count - 1)" @onclick="() => MoveActionAsync(action, 1)" title="Descendre">
                                                                 <i class="ti ti-arrow-down"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveActionAsync(action)" title="Supprimer">
+                                                            <button type="button" class="btn btn-sm btn-icon text-danger" disabled="@isEditing" @onclick="() => RemoveActionAsync(action)" title="Supprimer">
                                                                 <i class="ti ti-trash"></i>
                                                             </button>
                                                         </div>
@@ -301,13 +305,17 @@ else
 
                                     @if (_newAction.Type == DeploymentActionType.Command)
                                     {
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label">Commande à exécuter</label>
                                             <input class="form-control" @bind="_newAction.Command" />
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label">Code de retour attendu</label>
                                             <input type="number" class="form-control" @bind="_newAction.ExpectedReturnCode" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label" title="Nombre de lignes de sortie que l'agent doit remonter au serveur pour cette commande. -1 = illimité, 0 = aucune.">Lignes de log à récupérer</label>
+                                            <input type="number" class="form-control" @bind="_newAction.LogLineLimit" />
                                         </div>
                                     }
                                     else if (_newAction.Type is DeploymentActionType.Move or DeploymentActionType.Copy)
@@ -329,10 +337,18 @@ else
                                         </div>
                                     }
 
-                                    <div class="col-md-2">
-                                        <button type="button" class="btn btn-primary w-100" disabled="@(!CanAddAction)" @onclick="AddActionAsync">
-                                            <i class="ti ti-plus me-1"></i>Ajouter
-                                        </button>
+                                    <div class="col-md-3">
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-primary flex-fill" disabled="@(!CanAddAction)" @onclick="SaveActionAsync">
+                                                <i class="ti @(_editingActionEntry is not null ? "ti-device-floppy" : "ti-plus") me-1"></i>@(_editingActionEntry is not null ? "Enregistrer" : "Ajouter")
+                                            </button>
+                                            @if (_editingActionEntry is not null)
+                                            {
+                                                <button type="button" class="btn btn-outline-secondary" @onclick="CancelEditAction" title="Annuler la modification">
+                                                    <i class="ti ti-x"></i>
+                                                </button>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
