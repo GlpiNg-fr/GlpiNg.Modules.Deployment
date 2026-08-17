@@ -24,6 +24,11 @@ public class DeploymentJob
     public int PackageId { get; set; }
     public DeploymentPackage? Package { get; set; }
 
+    /// <summary>Tâche ayant créé ce job (voir DeploymentTaskLaunchService), nul pour une
+    /// assignation directe (self-service ou fiche Ordinateur, voir ComputerDeploymentAssignmentService).</summary>
+    public int? TaskId { get; set; }
+    public DeploymentTask? Task { get; set; }
+
     public DeploymentStatus Status { get; set; } = DeploymentStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? StartedAt { get; set; }

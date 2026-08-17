@@ -8,11 +8,13 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// <summary>
 /// Implémentation Web de <see cref="IComputerDeploymentTasksProvider"/> : alimente l'onglet
 /// "Tâches / groupes" de la fiche Ordinateur (module Inventory) à partir des
-/// <see cref="DeploymentJob"/> exécutés sur l'agent du poste et des
-/// <see cref="DeployComputerGroup"/> dont il est membre — reprend l'onglet du même nom de
-/// GLPI-Inventory (table plugin_glpiinventory_taskjobstates côté GLPI, sans le concept de
-/// "Task" englobant plusieurs jobs planifiés : ici un "Tâche" de l'onglet correspond à un
-/// <see cref="DeploymentPackage"/>, seul type de job de déploiement que GlpiNg reprend).
+/// <see cref="DeploymentTask"/> qui ciblent ce poste — directement (acteur Ordinateur) ou via
+/// l'un de ses groupes (acteur Groupe, statique ou dynamique, voir
+/// <see cref="DeployGroupCriteriaEvaluator"/>) — et des <see cref="DeployComputerGroup"/> dont il
+/// est membre. Une tâche apparaît dans la liste dès qu'elle cible le poste, même si elle n'a
+/// jamais encore été lancée ; une tâche qui ne le cible plus mais l'a déjà ciblé par le passé
+/// (l'agent a des <see cref="DeploymentJob"/> à son actif pour cette tâche) reste visible pour
+/// conserver l'historique — voir <see cref="TargetsComputer"/>.
 /// </summary>
 public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext> dbFactory) : IComputerDeploymentTasksProvider
 {
@@ -30,36 +32,46 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
             return info;
         }
 
+        List<DeploymentTask> tasks = await db.Set<DeploymentTask>()
+            .AsNoTracking()
+            .Include(t => t.Targets).ThenInclude(target => target.Group).ThenInclude(g => g!.Members)
+            .Include(t => t.Targets).ThenInclude(target => target.Group).ThenInclude(g => g!.Criteria)
+            .ToListAsync(cancellationToken);
+
+        Dictionary<int, List<DeploymentJob>> jobsByTaskId = [];
         if (computer.AgentId is { } agentId)
         {
-            List<DeploymentJob> jobs = await db.Set<DeploymentJob>()
+            List<DeploymentJob> agentJobs = await db.Set<DeploymentJob>()
                 .AsNoTracking()
-                .Include(j => j.Package)
-                .Where(j => j.AgentId == agentId)
+                .Where(j => j.AgentId == agentId && j.TaskId != null)
                 .ToListAsync(cancellationToken);
 
-            info.Tasks = jobs
-                .Where(j => j.Package is not null)
-                .GroupBy(j => j.Package!.Id)
-                .Select(group => new ComputerDeploymentTask
-                {
-                    PackageId = group.Key,
-                    Name = group.First().Package!.Name,
-                    Active = group.First().Package!.SupersededByPackageId is null,
-                    MethodLabel = "Déploiement de package",
-                    Executions = group
-                        .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
-                        .Select(j => new ComputerDeploymentTaskExecution
-                        {
-                            DateUtc = j.StartedAt ?? j.CreatedAt,
-                            StatusLabel = StatusLabel(j.Status),
-                            StatusBadgeCssClass = StatusBadgeCssClass(j.Status)
-                        })
-                        .ToList()
-                })
-                .OrderByDescending(t => t.Executions.Count > 0 ? t.Executions[0].DateUtc : null)
-                .ToList();
+            jobsByTaskId = agentJobs
+                .GroupBy(j => j.TaskId!.Value)
+                .ToDictionary(group => group.Key, group => group.ToList());
         }
+
+        info.Tasks = tasks
+            .Where(task => TargetsComputer(task, computer) || jobsByTaskId.ContainsKey(task.Id))
+            .Select(task => new ComputerDeploymentTask
+            {
+                TaskId = task.Id,
+                Name = task.Name,
+                Active = task.IsActive,
+                MethodLabel = "Déploiement de package",
+                Executions = (jobsByTaskId.TryGetValue(task.Id, out List<DeploymentJob>? jobs) ? jobs : [])
+                    .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
+                    .Select(j => new ComputerDeploymentTaskExecution
+                    {
+                        DateUtc = j.StartedAt ?? j.CreatedAt,
+                        StatusLabel = StatusLabel(j.Status),
+                        StatusBadgeCssClass = StatusBadgeCssClass(j.Status)
+                    })
+                    .ToList()
+            })
+            .OrderByDescending(t => t.Executions.Count > 0 ? t.Executions[0].DateUtc : null)
+            .ThenBy(t => t.Name)
+            .ToList();
 
         List<DeployComputerGroup> groups = await db.Set<DeployComputerGroup>()
             .AsNoTracking()
@@ -80,6 +92,33 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
             .ToList();
 
         return info;
+    }
+
+    private static bool TargetsComputer(DeploymentTask task, Computer computer)
+    {
+        foreach (DeploymentTaskTarget target in task.Targets)
+        {
+            if (target.Type == DeploymentTaskTargetType.Computer)
+            {
+                if (target.ComputerId == computer.Id)
+                {
+                    return true;
+                }
+            }
+            else if (target.Group is not null)
+            {
+                bool matches = target.Group.Type == DeployComputerGroupType.Static
+                    ? target.Group.Members.Any(m => m.ComputerId == computer.Id)
+                    : DeployGroupCriteriaEvaluator.Matches(computer, target.Group.Criteria);
+
+                if (matches)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static string StatusLabel(DeploymentStatus status) => status switch

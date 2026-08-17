@@ -34,6 +34,11 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li>
+                        <a class="dropdown-item @(Current == "tasks" ? "active" : "")" href="/tools/deployments/tasks">
+                            <i class="ti ti-list-check me-2"></i>Gestion des tâches
+                        </a>
+                    </li>
+                    <li>
                         <a class="dropdown-item @(Current == "supervision" ? "active" : "")" href="/tools/deployments/supervision">
                             <i class="ti ti-activity me-2"></i>Supervision / Logs
                         </a>
@@ -98,15 +103,15 @@
 
 @code {
     /// <summary>
-    /// Clef de la page active : "dashboard", "computergroups", "deploymentconfig", "supervision",
-    /// "collects", "timeslots", "packages", "mirrors" ou "interactiontemplates". Détermine à la fois
-    /// l'onglet du haut mis en évidence et, pour les sous-pages des menus déroulants
-    /// "Général"/"Tâches"/"Déployer", l'entrée active dans ces sous-menus.
+    /// Clef de la page active : "dashboard", "computergroups", "deploymentconfig", "tasks",
+    /// "supervision", "collects", "timeslots", "packages", "mirrors" ou "interactiontemplates".
+    /// Détermine à la fois l'onglet du haut mis en évidence et, pour les sous-pages des menus
+    /// déroulants "Général"/"Tâches"/"Déployer", l'entrée active dans ces sous-menus.
     /// </summary>
     [Parameter, EditorRequired]
     public string Current { get; set; } = string.Empty;
 
-    private bool IsTasksSection => Current is "supervision" or "collects" or "timeslots";
+    private bool IsTasksSection => Current is "tasks" or "supervision" or "collects" or "timeslots";
     private bool IsGeneralSection => Current is "agents" or "computergroups" or "deploymentconfig";
     private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates";
 }

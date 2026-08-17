@@ -38,7 +38,7 @@ public partial class Index : ComponentBase
             new("Ordinateurs inventoriés", "ti-device-desktop", "bg-primary", inventoriedComputers, "/parc/computer"),
             new("Agents enregistrés", "ti-cpu", "bg-azure", agentCount, "/tools/deployments/agent"),
             new("Paquets de déploiement", "ti-package", "bg-green", packageCount, "/tools/deployments/packages"),
-            new("Tâches de déploiement", "ti-rocket", "bg-orange", _pendingJobs + _runningJobs + _successJobs + _errorJobs, null),
+            new("Tâches de déploiement", "ti-rocket", "bg-orange", _pendingJobs + _runningJobs + _successJobs + _errorJobs, "/tools/deployments/tasks"),
         ];
     }
 }

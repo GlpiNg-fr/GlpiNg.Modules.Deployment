@@ -322,13 +322,14 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
             return;
         }
 
-        foreach (DeploymentPackageFile file in _package.Files)
-        {
-            FileStorage.DeleteParts(file.Parts.Select(part => part.StoragePath));
-        }
+        List<string> storagePaths = _package.Files.SelectMany(file => file.Parts)
+            .Select(part => part.StoragePath)
+            .ToList();
 
         _db.Set<DeploymentPackage>().Remove(_package);
         await _db.SaveChangesAsync();
+
+        await FileStorage.DeleteOrphanedPartsAsync(_db, storagePaths);
 
         Nav.NavigateTo("/tools/deployments");
     }
@@ -539,9 +540,13 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
             return;
         }
 
-        FileStorage.DeleteParts(file.Parts.Select(part => part.StoragePath));
+        List<string> storagePaths = file.Parts.Select(part => part.StoragePath).ToList();
+
         _db.Set<DeploymentPackageFile>().Remove(file);
         await _db.SaveChangesAsync();
+
+        await FileStorage.DeleteOrphanedPartsAsync(_db, storagePaths);
+
         await _db.Entry(_package).Collection(p => p.Files).Query().Include(f => f.Parts).LoadAsync();
         RebuildTabs();
     }

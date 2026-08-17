@@ -1,0 +1,142 @@
+@page "/self-service"
+@using GlpiNg.Modules.Abstractions.Deployment
+@using GlpiNg.Modules.Deployment.Services
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Libre-service</PageTitle>
+
+<div class="glpi-fiche-topbar">
+    <div class="glpi-fiche-crumb">
+        <i class="ti ti-shopping-cart"></i>
+        <span>Libre-service</span>
+    </div>
+</div>
+
+@if (_resultMessage is not null)
+{
+    <div class="alert @(_resultIsError ? "alert-danger" : "alert-success") alert-dismissible">
+        <i class="ti @(_resultIsError ? "ti-alert-triangle" : "ti-circle-check") me-1"></i>@_resultMessage
+        <a class="btn-close" @onclick="@(() => _resultMessage = null)"></a>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-package me-1"></i>Paquets disponibles</h3>
+    </div>
+    <div class="card-body">
+        @if (_isLoading)
+        {
+            <div class="text-center text-secondary py-4">
+                <span class="spinner-border spinner-border-sm me-1"></span>Chargement…
+            </div>
+        }
+        else if (_packages.Count == 0)
+        {
+            <div class="glpi-config-placeholder">
+                <i class="ti ti-package-off"></i>
+                <p class="mb-0">Aucun paquet n'est disponible en libre-service pour votre compte.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Paquet</th>
+                            <th>Description</th>
+                            <th>Poste</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (SelfServicePackageOption package in _packages)
+                        {
+                            List<SelfServiceComputerOption> computers = EligibleComputers(package.PackageId);
+                            <tr>
+                                <td class="fw-semibold">@package.Name</td>
+                                <td>@(package.Description ?? "—")</td>
+                                <td>
+                                    @if (computers.Count == 0)
+                                    {
+                                        <span class="text-secondary" title="Aucun de vos postes ne fait partie du groupe cible de ce paquet.">Aucun poste éligible</span>
+                                    }
+                                    else if (computers.Count == 1)
+                                    {
+                                        @computers[0].Name
+                                    }
+                                    else
+                                    {
+                                        <select class="form-select form-select-sm" @bind="_selectedComputerIdByPackageId[package.PackageId]">
+                                            @foreach (SelfServiceComputerOption computer in computers)
+                                            {
+                                                <option value="@computer.ComputerId">@computer.Name</option>
+                                            }
+                                        </select>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            disabled="@(computers.Count == 0 || _requestingPackageId is not null)"
+                                            @onclick="() => RequestAsync(package.PackageId)">
+                                        @if (_requestingPackageId == package.PackageId)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="ti ti-download me-1"></i>
+                                        }
+                                        Demander
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-history me-1"></i>Historique de mes demandes</h3>
+    </div>
+    <div class="card-body">
+        @if (_history.Count == 0)
+        {
+            <div class="glpi-config-placeholder">
+                <i class="ti ti-history-toggle"></i>
+                <p class="mb-0">Aucune demande pour le moment.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Paquet</th>
+                            <th>Poste</th>
+                            <th>Statut</th>
+                            <th>Demandé le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (SelfServiceRequestHistoryEntry entry in _history)
+                        {
+                            <tr>
+                                <td>@entry.PackageName</td>
+                                <td>@entry.ComputerName</td>
+                                <td><span class="badge @entry.StatusBadgeCssClass">@entry.StatusLabel</span></td>
+                                <td>@entry.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

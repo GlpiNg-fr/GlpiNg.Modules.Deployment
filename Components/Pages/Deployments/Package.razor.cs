@@ -102,13 +102,15 @@ public partial class Package : ComponentBase
             .Where(package => _selectedIds.Contains(package.Id))
             .ToListAsync();
 
-        foreach (DeploymentPackageFile file in toDelete.SelectMany(package => package.Files))
-        {
-            FileStorage.DeleteParts(file.Parts.Select(part => part.StoragePath));
-        }
+        List<string> storagePaths = toDelete.SelectMany(package => package.Files)
+            .SelectMany(file => file.Parts)
+            .Select(part => part.StoragePath)
+            .ToList();
 
         db.Set<DeploymentPackage>().RemoveRange(toDelete);
         await db.SaveChangesAsync();
+
+        await FileStorage.DeleteOrphanedPartsAsync(db, storagePaths);
 
         await LoadAsync();
     }

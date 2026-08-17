@@ -100,7 +100,7 @@ public class DeploymentPackageFilesController(
             {
                 string fileName = disposition.FileName.Value;
                 (string fileSha512, long sizeBytes, IReadOnlyList<(string StoragePath, string Sha512, long SizeBytes)> parts) =
-                    await fileStorage.SaveAsSplitAsync(section.Body, fileName, cancellationToken);
+                    await fileStorage.SaveAsSplitAsync(section.Body, cancellationToken);
 
                 DeploymentPackageFile packageFile = new()
                 {

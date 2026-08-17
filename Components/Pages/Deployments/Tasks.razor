@@ -1,0 +1,218 @@
+@page "/tools/deployments/tasks"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="tasks" />
+
+<div class="glpi-list-page">
+
+@if (_launchMessage is not null)
+{
+    <div class="alert @(_launchMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+        <i class="ti @(_launchMessageIsError ? "ti-alert-triangle" : "ti-circle-check") me-1"></i>@_launchMessage
+        <a class="btn-close" @onclick="@(() => _launchMessage = null)"></a>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>Rechercher
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Rechercher une tâche..."
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <label class="form-check m-0 px-2" title="Tout sélectionner">
+                <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                       @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+            </label>
+
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count tâche(s) sélectionnée(s) ? Cette action est définitive.</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                <i class="ti ti-plus me-1"></i>Nouvelle tâche
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th>Nom</th>
+                    <th>Méthode</th>
+                    <th>Paquets</th>
+                    <th>Acteurs</th>
+                    <th>Activé</th>
+                    <th>Dernière exécution</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredTasks.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-4">Aucune tâche de déploiement trouvée.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (DeploymentTask task in _filteredTasks)
+                    {
+                        (int pending, int running, int success, int error) = JobStats(task);
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(task.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(task.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/tools/deployments/tasks/{task.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-list-check me-1 text-secondary"></i>@task.Name
+                                </a>
+                            </td>
+                            <td><span class="badge bg-blue-lt"><i class="ti ti-rocket me-1"></i>Déploiement de paquet</span></td>
+                            <td>
+                                @if (task.Packages.Count == 0)
+                                {
+                                    <span class="text-secondary">Aucun paquet</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-blue-lt" title="@string.Join(", ", task.Packages.Select(p => p.Package?.Name))">
+                                        @task.Packages.Count paquet(s)
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (task.Targets.Count == 0)
+                                {
+                                    <span class="text-secondary">Aucun acteur</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-azure-lt" title="@string.Join(", ", task.Targets.Select(TargetName))">
+                                        @task.Targets.Count acteur(s)
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (task.IsActive)
+                                {
+                                    <span class="badge bg-success-lt">Oui</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">Non</span>
+                                }
+                            </td>
+                            <td>
+                                @if (task.LastLaunchedAt is { } lastLaunched)
+                                {
+                                    <div>@lastLaunched.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="d-flex gap-1">
+                                        @if (pending > 0)
+                                        {
+                                            <span class="badge bg-secondary-lt" title="En attente">@pending</span>
+                                        }
+                                        @if (running > 0)
+                                        {
+                                            <span class="badge bg-azure-lt" title="En cours">@running</span>
+                                        }
+                                        @if (success > 0)
+                                        {
+                                            <span class="badge bg-success-lt" title="Réussi">@success</span>
+                                        }
+                                        @if (error > 0)
+                                        {
+                                            <span class="badge bg-danger-lt" title="En erreur">@error</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">Jamais lancée</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm" disabled="@(LaunchDisabledReason(task) is not null || _launchingTaskId is not null)"
+                                        @onclick="() => LaunchAsync(task.Id)" title="@(LaunchDisabledReason(task) ?? "Lancer maintenant")">
+                                    @if (_launchingTaskId == task.Id)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="ti ti-player-play me-1"></i>
+                                    }
+                                    Lancer
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newTaskModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-list-check me-2"></i>Nouvel élément - Tâche</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="glpi-fiche-field">
+                    <label>Nom</label>
+                    <input class="form-control" @bind="_newTask.Name" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Commentaires</label>
+                    <textarea class="form-control" rows="3" @bind="_newTask.Comment"></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="newTaskAllowRePreparation" @bind="_newTask.AllowRePreparation" />
+                    <label class="form-check-label" for="newTaskAllowRePreparation">Permet la re-préparation de la tâche après son exécution</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@string.IsNullOrWhiteSpace(_newTask.Name)" @onclick="CreateTaskAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using GlpiNg.Modules.Deployment.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace GlpiNg.Modules.Deployment.Services;
@@ -33,13 +35,12 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
     private const long DefaultPartSizeBytes = 5 * 1024 * 1024;
 
     public async Task<(string FileSha512, long TotalSizeBytes, IReadOnlyList<(string StoragePath, string Sha512, long SizeBytes)> Parts)>
-        SaveAsSplitAsync(Stream input, string originalFileName, CancellationToken cancellationToken = default)
+        SaveAsSplitAsync(Stream input, CancellationToken cancellationToken = default)
     {
         string rootPath = RootPath();
         Directory.CreateDirectory(rootPath);
 
         long partSize = PartSizeBytes();
-        string safeFileName = Path.GetFileName(originalFileName);
         byte[] buffer = new byte[ReadBufferSize];
         List<(string StoragePath, string Sha512, long SizeBytes)> parts = [];
 
@@ -50,13 +51,15 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
 
         while (!endOfStream)
         {
-            string partStoragePath = $"{Guid.NewGuid():N}_{safeFileName}.part{partIndex:D5}";
-            string partFullPath = Path.Combine(rootPath, partStoragePath);
+            // Le nom final (sha512 du contenu du fragment) n'est connu qu'une fois le fragment
+            // entièrement écrit : on écrit d'abord sous un nom temporaire, puis on renomme.
+            string tempStoragePath = $"{Guid.NewGuid():N}.tmp";
+            string tempFullPath = Path.Combine(rootPath, tempStoragePath);
 
             using IncrementalHash partHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA512);
             long partSizeWritten = 0;
 
-            await using (FileStream output = System.IO.File.Create(partFullPath))
+            await using (FileStream output = System.IO.File.Create(tempFullPath))
             {
                 while (partSizeWritten < partSize)
                 {
@@ -80,11 +83,19 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
             {
                 // Rien écrit dans ce fragment (flux déjà épuisé pile à la frontière du fragment
                 // précédent) : on le retire plutôt que de garder un fragment vide inutile.
-                System.IO.File.Delete(partFullPath);
+                System.IO.File.Delete(tempFullPath);
                 break;
             }
 
-            parts.Add((partStoragePath, Convert.ToHexStringLower(partHash.GetHashAndReset()), partSizeWritten));
+            string partSha512 = Convert.ToHexStringLower(partHash.GetHashAndReset());
+            string partStoragePath = ShardedPartStoragePath(partSha512);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(rootPath, partStoragePath))!);
+            // Deux fragments (même dans des fichiers différents) peuvent avoir un contenu
+            // identique et donc le même sha512 : overwrite:true est sans risque puisque le
+            // contenu est alors, par définition, le même.
+            System.IO.File.Move(tempFullPath, Path.Combine(rootPath, partStoragePath), overwrite: true);
+
+            parts.Add((partStoragePath, partSha512, partSizeWritten));
             partIndex++;
         }
 
@@ -92,12 +103,16 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
         {
             // Fichier vide : on garde tout de même un fragment (taille 0) pour rester cohérent
             // avec l'invariant "au moins une part par fichier".
-            string emptyPartPath = $"{Guid.NewGuid():N}_{safeFileName}.part00000";
-            await using (System.IO.File.Create(Path.Combine(rootPath, emptyPartPath)))
+            string emptyPartSha512 = Convert.ToHexStringLower(SHA512.HashData([]));
+            string emptyPartPath = ShardedPartStoragePath(emptyPartSha512);
+            string emptyPartFullPath = Path.Combine(rootPath, emptyPartPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(emptyPartFullPath)!);
+            if (!System.IO.File.Exists(emptyPartFullPath))
             {
+                await using System.IO.FileStream _ = System.IO.File.Create(emptyPartFullPath);
             }
 
-            parts.Add((emptyPartPath, Convert.ToHexStringLower(SHA512.HashData([])), 0));
+            parts.Add((emptyPartPath, emptyPartSha512, 0));
         }
 
         string fileSha512 = Convert.ToHexStringLower(wholeFileHash.GetHashAndReset());
@@ -124,10 +139,25 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
 
     public string GetFullPath(string storagePath) => Path.Combine(RootPath(), storagePath);
 
-    public void DeleteParts(IEnumerable<string> storagePaths)
+    /// <summary>Supprime du disque les fragments de <paramref name="storagePaths"/> qui ne sont
+    /// plus référencés par aucun <see cref="DeploymentPackageFilePart"/> en base. Nécessaire
+    /// depuis que les fragments sont nommés par leur sha512 (voir <see cref="SaveAsSplitAsync"/>) :
+    /// deux fragments au contenu identique, même dans des fichiers/paquets différents, partagent
+    /// désormais le même fichier physique. À appeler après (jamais avant) la suppression des
+    /// lignes en base, sans quoi les lignes sur le point d'être supprimées seraient encore vues
+    /// comme des références valides.</summary>
+    public async Task DeleteOrphanedPartsAsync(DbContext db, IEnumerable<string> storagePaths,
+        CancellationToken cancellationToken = default)
     {
-        foreach (string storagePath in storagePaths)
+        foreach (string storagePath in storagePaths.Distinct())
         {
+            bool stillReferenced = await db.Set<DeploymentPackageFilePart>()
+                .AnyAsync(part => part.StoragePath == storagePath, cancellationToken);
+            if (stillReferenced)
+            {
+                continue;
+            }
+
             string fullPath = GetFullPath(storagePath);
             if (System.IO.File.Exists(fullPath))
             {
@@ -135,6 +165,11 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
             }
         }
     }
+
+    /// <summary>Chemin relatif (sous <c>RootPath</c>) d'un fragment, réparti sur deux niveaux de
+    /// dossiers d'après son sha512 pour éviter des dossiers à plusieurs centaines de milliers
+    /// d'entrées : <c>0b5161778c...</c> → <c>0/0b/0b5161778c...</c>.</summary>
+    private static string ShardedPartStoragePath(string sha512) => $"{sha512[..1]}/{sha512[..2]}/{sha512}";
 
     private string RootPath() => configuration["PackageStorage:RootPath"] ?? "PackageStorage";
 

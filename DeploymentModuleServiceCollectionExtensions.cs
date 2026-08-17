@@ -24,6 +24,10 @@ public static class DeploymentModuleServiceCollectionExtensions
         // (voir PackageStorage:RootPath, lu aussi par AgentController.GetDeployFile).
         services.AddScoped<DeploymentPackageFileStorageService>();
 
+        // Lancement d'une DeploymentTask (page /tools/deployments/tasks) : crée les
+        // DeploymentJob pour tous les agents du groupe cible — voir DeploymentTaskLaunchService.
+        services.AddScoped<DeploymentTaskLaunchService>();
+
         // Alimente l'onglet "Tâches / groupes" de la fiche Ordinateur (module Inventory) sans
         // que celui-ci dépende du module Déploiement — voir IComputerDeploymentTasksProvider
         // (GlpiNg.Modules.Abstractions), même principe qu'IMenuProvider.
@@ -33,6 +37,12 @@ public static class DeploymentModuleServiceCollectionExtensions
         // liste des paquets assignables, assignation/annulation — voir
         // IComputerDeploymentAssignmentService (GlpiNg.Modules.Abstractions), même principe.
         services.AddScoped<IComputerDeploymentAssignmentService, ComputerDeploymentAssignmentService>();
+
+        // Alimente la page /self-service (libre-service) : paquets ouverts au libre-service
+        // pour lesquels l'utilisateur connecté est éligible, poste(s) sur lesquels il peut les
+        // demander, et la demande elle-même — voir SelfServiceDeploymentService, qui délègue à
+        // IComputerDeploymentAssignmentService ci-dessus pour l'assignation proprement dite.
+        services.AddScoped<SelfServiceDeploymentService>();
 
         // Contribution du module au menu latéral de l'hôte (entrée "Déploiements" du
         // groupe "Outils") — voir DeploymentMenuProvider.
