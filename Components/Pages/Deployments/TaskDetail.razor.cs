@@ -1,3 +1,6 @@
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
@@ -225,6 +228,59 @@ public partial class TaskDetail : ComponentBase, IAsyncDisposable
     private void ToggleLog(int jobId)
     {
         _expandedJobId = _expandedJobId == jobId ? null : jobId;
+    }
+
+    // Journal brut de l'agent, ligne par ligne : "[HH:mm:ss] [phase] message". On extrait
+    // l'horodatage et la phase pour les styler à part (voir .glpi-log-time/.glpi-log-tag) et on
+    // colore la ligne entière selon son issue (ok/succès en vert, ko/erreur en rouge, séparateurs
+    // "====" atténués) pour que le regard retrouve immédiatement les étapes en échec dans un long
+    // journal. Tout le texte libre passe par HtmlEncode avant d'être réinjecté, la seule structure
+    // ajoutée étant les balises <div>/<span> ci-dessous.
+    private static readonly Regex LogLinePrefixRegex = new(
+        @"^\[(?<time>\d{2}:\d{2}:\d{2})\]\s*(?:\[(?<tag>[a-zA-Z]+)\]\s*)?(?<rest>.*)$",
+        RegexOptions.Compiled);
+
+    private static MarkupString RenderLog(string log)
+    {
+        StringBuilder html = new();
+
+        foreach (string rawLine in log.Replace("\r\n", "\n").Split('\n'))
+        {
+            string line = rawLine.TrimEnd('\r');
+            string trimmed = line.Trim();
+
+            string lineClass = trimmed.Length > 0 && trimmed.All(c => c == '=')
+                ? "glpi-log-line glpi-log-sep"
+                : Regex.IsMatch(line, @"\(ok\)\s*$", RegexOptions.IgnoreCase) || line.Contains("success", StringComparison.OrdinalIgnoreCase)
+                    ? "glpi-log-line glpi-log-ok"
+                    : Regex.IsMatch(line, @"\(ko\)\s*$", RegexOptions.IgnoreCase)
+                      || line.Contains("error", StringComparison.OrdinalIgnoreCase)
+                      || line.Contains("failed", StringComparison.OrdinalIgnoreCase)
+                        ? "glpi-log-line glpi-log-error"
+                        : "glpi-log-line";
+
+            html.Append("<div class=\"").Append(lineClass).Append("\">");
+
+            Match match = LogLinePrefixRegex.Match(line);
+            if (match.Success)
+            {
+                html.Append("<span class=\"glpi-log-time\">[").Append(WebUtility.HtmlEncode(match.Groups["time"].Value)).Append("]</span> ");
+                if (match.Groups["tag"].Success)
+                {
+                    html.Append("<span class=\"glpi-log-tag\">[").Append(WebUtility.HtmlEncode(match.Groups["tag"].Value)).Append("]</span> ");
+                }
+
+                html.Append(WebUtility.HtmlEncode(match.Groups["rest"].Value));
+            }
+            else
+            {
+                html.Append(WebUtility.HtmlEncode(line));
+            }
+
+            html.Append("</div>");
+        }
+
+        return new MarkupString(html.ToString());
     }
 
     // Contenu du bouton "i" à côté des selects de créneau horaire (Créneau horaire de

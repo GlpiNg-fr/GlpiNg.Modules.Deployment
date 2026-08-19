@@ -59,10 +59,13 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             {
                 JobId = j.Id,
                 PackageId = j.PackageId,
+                TaskId = j.TaskId,
+                Log = j.Log,
                 PackageName = j.Package!.Name,
                 StatusLabel = StatusLabel(j.Status),
                 StatusBadgeCssClass = StatusBadgeCssClass(j.Status),
                 CanCancel = j.Status == DeploymentStatus.Pending,
+                CanRetry = j.Status is DeploymentStatus.Success or DeploymentStatus.Error,
                 CreatedAtUtc = j.CreatedAt,
                 StartedAtUtc = j.StartedAt,
                 CompletedAtUtc = j.CompletedAt
@@ -171,6 +174,29 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
         }
 
         db.Set<DeploymentJob>().Remove(job);
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> RetryAssignmentAsync(int jobId, CancellationToken cancellationToken = default)
+    {
+        await using DbContext db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+        DeploymentJob? job = await db.Set<DeploymentJob>()
+            .FirstOrDefaultAsync(j => j.Id == jobId && (j.Status == DeploymentStatus.Success || j.Status == DeploymentStatus.Error), cancellationToken);
+        if (job is null)
+        {
+            return false;
+        }
+
+        job.Status = DeploymentStatus.Pending;
+        job.StartedAt = null;
+        job.CompletedAt = null;
+        // Le journal est cumulatif (voir AgentController.HandleSetStatusAsync, qui ajoute une
+        // ligne à chaque appel plutôt que de remplacer) : on le vide pour que le prochain journal
+        // ne mélange pas la tentative précédente avec la nouvelle.
+        job.Log = null;
+
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }

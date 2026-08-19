@@ -6,17 +6,17 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// <summary>
 /// Construit la réponse JSON de la tâche "deploy" envoyée à GLPI-Agent.
 ///
-/// Format vérifié par recoupement d'échanges réels agent/serveur (retours de la
-/// communauté GLPI-Project) :
 /// <code>
 /// {
-///   "jobs": {
-///     "uuid": "...",
-///     "checks": [ { "name": "...", "type": "fileExists", "path": "...", "value": "...", "return": "info" } ],
-///     "associatedFiles": [ "&lt;sha512&gt;", ... ],
-///     "actions": [ { "move": { "from": "...", "to": "...", "name": "..." } }, ... ],
-///     "userinteractions": []
-///   },
+///   "jobs": [
+///     {
+///       "uuid": "...",
+///       "checks": [ { "name": "...", "type": "fileExists", "path": "...", "value": "...", "return": "info" } ],
+///       "associatedFiles": [ "&lt;sha512&gt;", ... ],
+///       "actions": [ { "move": { "from": "...", "to": "...", "name": "..." } }, ... ],
+///       "userinteractions": []
+///     }
+///   ],
 ///   "associatedFiles": {
 ///     "&lt;sha512&gt;": {
 ///       "name": "...", "p2p": "0", "p2p-retention-duration": "0",
@@ -26,14 +26,17 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// }
 /// </code>
 ///
-/// NB : le champ "uuid" utilisé ici sert de corrélation interne (identifiant du
-/// <see cref="DeploymentJob"/>) — le protocole réel du plugin GlpiInventory utilise un
-/// endpoint séparé à base de query-string (action=getJobs/setStatus) que ce serveur
-/// choisit de ne pas reproduire tel quel : ce point est une adaptation, pas une donnée
-/// vérifiée du protocole d'origine. Le champ "multiparts" reprend l'esprit du découpage en
-/// fragments du protocole réel (téléchargement/vérification fragment par fragment par
-/// l'agent, voir <see cref="DeploymentPackageFilePart"/>) sans prétendre à une fidélité
-/// exacte de forme, faute de spécification de référence accessible pour ce point précis.
+/// "jobs" est un TABLEAU même quand ce serveur ne renvoie jamais qu'un seul job à la fois (voir
+/// AgentController.HandleGetJobsCoreAsync, qui ne sert que le plus ancien DeploymentJob en
+/// attente) — confirmé en conditions réelles contre GLPI::Agent::Task::Deploy::_validateAnswer
+/// (agent GLPI-Agent 1.18), qui fait <c>foreach my $job (@{$answer->{jobs}})</c> : un objet nu à
+/// la place de ce tableau fait mourir le thread Deploy de l'agent (déréférencement d'un hashref
+/// comme tableau sous `use strict`) sans qu'aucune erreur ne remonte au log agent ni au serveur —
+/// silencieux des deux côtés, à ne pas confondre avec un job qui n'aurait simplement rien à faire.
+/// Cette erreur de forme a existé un temps dans ce fichier (objet nu plutôt que tableau) avant
+/// d'être corrigée suite à ce constat ; le champ "uuid" (identifiant interne du
+/// <see cref="DeploymentJob"/>) et "multiparts" (calqué sur <see cref="DeploymentPackageFilePart"/>)
+/// restent des adaptations non vérifiées au-delà de ce qui précède.
 /// </summary>
 public class DeployJobJsonBuilder
 {
@@ -72,7 +75,7 @@ public class DeployJobJsonBuilder
             };
         }
 
-        JsonObject jobs = new()
+        JsonObject jobDetails = new()
         {
             ["uuid"] = jobUuid,
             ["checks"] = checks,
@@ -83,7 +86,7 @@ public class DeployJobJsonBuilder
 
         return new JsonObject
         {
-            ["jobs"] = jobs,
+            ["jobs"] = new JsonArray { jobDetails },
             ["associatedFiles"] = associatedFilesDetails
         };
     }
