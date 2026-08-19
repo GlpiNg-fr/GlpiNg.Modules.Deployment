@@ -76,7 +76,7 @@ public partial class ComputerGroupDetail : ComponentBase, IAsyncDisposable
             return;
         }
 
-        List<Computer> allComputers = await _db.Set<Computer>().AsNoTracking().ToListAsync();
+        List<Computer> allComputers = await _db.Set<Computer>().AsNoTracking().Include(c => c.StatusItem).ToListAsync();
         _dynamicMatches = DeployGroupCriteriaEvaluator.Filter(allComputers, _group.Criteria)
             .OrderBy(c => c.Name)
             .ToList();
@@ -168,7 +168,7 @@ public partial class ComputerGroupDetail : ComponentBase, IAsyncDisposable
     private async Task EnsureDistinctValuesLoadedAsync()
     {
         DeployCriterionField field = _newCriterion.Field;
-        if (_db is null || field == DeployCriterionField.Status || _distinctValuesCache.ContainsKey(field))
+        if (_db is null || _distinctValuesCache.ContainsKey(field))
         {
             return;
         }
@@ -181,6 +181,7 @@ public partial class ComputerGroupDetail : ComponentBase, IAsyncDisposable
         {
             DeployCriterionField.Name => _db.Set<Computer>().Select(c => (string?)c.Name),
             DeployCriterionField.SerialNumber => _db.Set<Computer>().Select(c => c.SerialNumber),
+            DeployCriterionField.Status => _db.Set<Computer>().Select(c => c.StatusItem != null ? c.StatusItem.Name : null),
             DeployCriterionField.Manufacturer => _db.Set<Computer>().Select(c => c.Manufacturer),
             DeployCriterionField.Model => _db.Set<Computer>().Select(c => c.Model),
             DeployCriterionField.OperatingSystem => _db.Set<Computer>().Select(c => c.OperatingSystem),
@@ -244,15 +245,6 @@ public partial class ComputerGroupDetail : ComponentBase, IAsyncDisposable
     };
 
     private static string LinkLabel(DeployCriterionLink link) => link == DeployCriterionLink.Or ? "OU" : "ET";
-
-    private static string StatusOptionLabel(ComputerStatus status) => status switch
-    {
-        ComputerStatus.InStock => "En stock",
-        ComputerStatus.InProduction => "En production",
-        ComputerStatus.Broken => "En panne",
-        ComputerStatus.Retired => "Réformé",
-        _ => status.ToString()
-    };
 
     public async ValueTask DisposeAsync()
     {

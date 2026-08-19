@@ -115,7 +115,7 @@ public sealed class SelfServiceDeploymentService(
             return [];
         }
 
-        List<Computer> allComputers = await db.Set<Computer>().AsNoTracking().ToListAsync(cancellationToken);
+        List<Computer> allComputers = await db.Set<Computer>().AsNoTracking().Include(c => c.StatusItem).ToListAsync(cancellationToken);
 
         IEnumerable<Computer> groupComputers = group.Type == DeployComputerGroupType.Static
             ? allComputers.Where(c => group.Members.Any(m => m.ComputerId == c.Id))

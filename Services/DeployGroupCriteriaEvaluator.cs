@@ -43,7 +43,7 @@ public static class DeployGroupCriteriaEvaluator
             DeployCriterionField.Model => computer.Model,
             DeployCriterionField.OperatingSystem => computer.OperatingSystem,
             DeployCriterionField.OsVersion => computer.OsVersion,
-            DeployCriterionField.Status => computer.Status.ToString(),
+            DeployCriterionField.Status => computer.StatusItem?.Name,
             DeployCriterionField.Site => computer.Site,
             DeployCriterionField.Building => computer.Building,
             DeployCriterionField.Room => computer.Room,

@@ -146,16 +146,6 @@ else
                                 {
                                     <input class="form-control" disabled placeholder="—" />
                                 }
-                                else if (_newCriterion.Field == DeployCriterionField.Status)
-                                {
-                                    <select class="form-select" @bind="_newCriterion.Value">
-                                        <option value="">-----</option>
-                                        @foreach (ComputerStatus status in Enum.GetValues<ComputerStatus>())
-                                        {
-                                            <option value="@status">@StatusOptionLabel(status)</option>
-                                        }
-                                    </select>
-                                }
                                 else if (_newCriterion.Operator is DeployCriterionOperator.Is or DeployCriterionOperator.IsNot
                                     && _distinctValuesCache.TryGetValue(_newCriterion.Field, out List<string>? distinctValues))
                                 {

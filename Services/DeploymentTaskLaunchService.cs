@@ -91,7 +91,7 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
                 }
                 else
                 {
-                    allComputers ??= await db.Set<Computer>().AsNoTracking().ToListAsync(cancellationToken);
+                    allComputers ??= await db.Set<Computer>().AsNoTracking().Include(c => c.StatusItem).ToListAsync(cancellationToken);
                     foreach (Computer computer in DeployGroupCriteriaEvaluator.Filter(allComputers, target.Group.Criteria))
                     {
                         computerIds.Add(computer.Id);
