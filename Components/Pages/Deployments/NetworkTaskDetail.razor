@@ -1,0 +1,401 @@
+@page "/tools/deployments/networktasks/{TaskId:int}"
+@using GlpiNg.Modules.Inventory.Models
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_task?.Name ?? "Tâche réseau")</PageTitle>
+
+<DeploymentTopMenu Current="networktasks" />
+
+@if (_task is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-radar-2 fs-1"></i>
+        <p class="mt-2">Cette tâche réseau est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-topbar">
+        <a class="glpi-fiche-pager-btn" href="/tools/deployments/networktasks" title="Retour à la liste">
+            <i class="ti ti-list"></i>
+        </a>
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-radar-2"></i>
+            <span>Tâche réseau - @_task.Name - ID @_task.Id</span>
+        </div>
+        <div class="glpi-fiche-toolbar">
+            <span class="text-secondary me-2">
+                <i class="ti ti-history me-1"></i>Dernière exécution :
+                @(_task.LastLaunchedAt is { } last ? last.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "jamais")
+            </span>
+            <button type="button" class="btn btn-primary" disabled="@(LaunchDisabledReason(_task) is not null || _isLaunching)"
+                    title="@(LaunchDisabledReason(_task) ?? "Lancer maintenant")" @onclick="LaunchAsync">
+                @if (_isLaunching)
+                {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                else
+                {
+                    <i class="ti ti-player-play me-1"></i>
+                }
+                Lancer maintenant
+            </button>
+        </div>
+    </div>
+
+    @if (_launchMessage is not null)
+    {
+        <div class="alert @(_launchMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+            <i class="ti @(_launchMessageIsError ? "ti-alert-triangle" : "ti-circle-check") me-1"></i>@_launchMessage
+            <a class="btn-close" @onclick="@(() => _launchMessage = null)"></a>
+        </div>
+    }
+
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+                <i class="ti ti-settings"></i>
+                <span>Principal</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "ranges" ? "active" : "")" @onclick='() => SetTab("ranges")'>
+                <i class="ti ti-list-numbers"></i>
+                <span>Plages IP</span>
+                <span class="glpi-fiche-tab-count">@_task.IpRanges.Count</span>
+            </button>
+            @if (_task.Method == NetworkTaskMethod.NetworkInventory)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "credentials" ? "active" : "")" @onclick='() => SetTab("credentials")'>
+                    <i class="ti ti-key"></i>
+                    <span>Identifiants SNMP</span>
+                    <span class="glpi-fiche-tab-count">@_task.Credentials.Count</span>
+                </button>
+            }
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "actors" ? "active" : "")" @onclick='() => SetTab("actors")'>
+                <i class="ti ti-target-arrow"></i>
+                <span>Acteurs</span>
+                <span class="glpi-fiche-tab-count">@_task.Actors.Count</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
+                <i class="ti ti-history"></i>
+                <span>Exécutions des jobs</span>
+                <span class="glpi-fiche-tab-count">@_task.Jobs.Count</span>
+            </button>
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "main":
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Nom</label>
+                                <input class="form-control" @bind="_task.Name" @bind:event="oninput" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Commentaires</label>
+                                <textarea class="form-control" rows="3" @bind="_task.Comment"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Méthode du module</label>
+                                <select class="form-select" value="@_task.Method" @onchange="@((ChangeEventArgs e) => _task.Method = Enum.Parse<NetworkTaskMethod>((string)e.Value!))">
+                                    <option value="@NetworkTaskMethod.NetworkDiscovery">Découverte réseau</option>
+                                    <option value="@NetworkTaskMethod.NetworkInventory">Inventaire réseau (SNMP)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="networkTaskActive" @bind="_task.IsActive" />
+                                <label class="form-check-label" for="networkTaskActive">Activé</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Heure de démarrage planifiée</label>
+                                <div class="input-group">
+                                    <input type="datetime-local" class="form-control" @bind="_task.ScheduledStartTime" />
+                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledStartTime = null" title="Effacer">
+                                        <i class="ti ti-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Heure de fin planifiée</label>
+                                <div class="input-group">
+                                    <input type="datetime-local" class="form-control" @bind="_task.ScheduledEndTime" />
+                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledEndTime = null" title="Effacer">
+                                        <i class="ti ti-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Créneau horaire d'exécution</label>
+                                <div class="input-group">
+                                    <select class="form-select" @bind="_task.ExecutionTimeSlotId">
+                                        <option value="">-----</option>
+                                        @foreach (TimeSlot slot in _availableTimeSlots)
+                                        {
+                                            <option value="@slot.Id">@slot.Name</option>
+                                        }
+                                    </select>
+                                    <button type="button" class="btn btn-icon" title="@TimeSlotTooltip(_task.ExecutionTimeSlotId)">
+                                        <i class="ti ti-info-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-secondary">
+                                Créneaux gérés depuis <a href="/tools/deployments/timeslots">Créneau horaire</a>. Appliqué automatiquement par
+                                le module Scheduler (lancement automatique dès que la fenêtre s'ouvre), même mécanique que pour les tâches de
+                                déploiement de paquets.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                        </button>
+                        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                        </button>
+                    </div>
+                    break;
+
+                case "ranges":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-list-numbers"></i>Plages IP (@_task.IpRanges.Count)</div>
+                        <p class="text-secondary">Plages scannées par cette tâche — gérées depuis <a href="/tools/deployments/ipranges">Plages IP</a>.</p>
+
+                        @if (_task.IpRanges.Count > 0)
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Début</th>
+                                            <th>Fin</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (NetworkTaskIpRange taskRange in _task.IpRanges)
+                                        {
+                                            <tr>
+                                                <td>@(taskRange.IpRange?.Name ?? "—")</td>
+                                                <td>@(taskRange.IpRange?.StartIp ?? "—")</td>
+                                                <td>@(taskRange.IpRange?.EndIp ?? "—")</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveIpRangeAsync(taskRange)">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <small class="text-secondary d-block mb-3">Sans plage IP, cette tâche ne peut pas être lancée.</small>
+                        }
+
+                        <div class="d-flex gap-2">
+                            <select class="form-select" style="max-width: 320px;" @bind="_ipRangeIdToAdd">
+                                <option value="0">-- Choisir une plage --</option>
+                                @foreach (IpRange range in IpRangesToAdd)
+                                {
+                                    <option value="@range.Id">@range.Name (@range.StartIp - @range.EndIp)</option>
+                                }
+                            </select>
+                            <button type="button" class="btn btn-primary" disabled="@(_ipRangeIdToAdd == 0)" @onclick="AddIpRangeAsync">
+                                <i class="ti ti-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                    break;
+
+                case "credentials":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-key"></i>Identifiants SNMP (@_task.Credentials.Count)</div>
+                        <p class="text-secondary">
+                            Identifiants essayés sur chaque hôte répondant — gérés depuis <a href="/tools/deployments/snmpcredentials">Identifiants SNMP</a>.
+                        </p>
+
+                        @if (_task.Credentials.Count > 0)
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Version</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (NetworkTaskCredential taskCredential in _task.Credentials)
+                                        {
+                                            <tr>
+                                                <td>@(taskCredential.SnmpCredential?.Name ?? "—")</td>
+                                                <td>@(taskCredential.SnmpCredential?.Version.ToString() ?? "—")</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveCredentialAsync(taskCredential)">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <small class="text-secondary d-block mb-3">Sans identifiant SNMP, une tâche d'inventaire réseau ne peut pas être lancée.</small>
+                        }
+
+                        <div class="d-flex gap-2">
+                            <select class="form-select" style="max-width: 320px;" @bind="_credentialIdToAdd">
+                                <option value="0">-- Choisir un identifiant --</option>
+                                @foreach (SnmpCredential credential in CredentialsToAdd)
+                                {
+                                    <option value="@credential.Id">@credential.Name</option>
+                                }
+                            </select>
+                            <button type="button" class="btn btn-primary" disabled="@(_credentialIdToAdd == 0)" @onclick="AddCredentialAsync">
+                                <i class="ti ti-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                    break;
+
+                case "actors":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Actors.Count)</div>
+                        <p class="text-secondary">Agents GLPI-Agent chargés d'exécuter le scan.</p>
+
+                        @if (_task.Actors.Count > 0)
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Agent</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (NetworkTaskActor actor in _task.Actors)
+                                        {
+                                            <tr>
+                                                <td>@(actor.Agent?.AgentName ?? actor.Agent?.DeviceId ?? actor.Agent?.Hostname ?? "—")</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveActorAsync(actor)">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <small class="text-secondary d-block mb-3">Sans acteur, cette tâche ne peut pas être lancée.</small>
+                        }
+
+                        <div class="d-flex gap-2">
+                            <select class="form-select" style="max-width: 320px;" @bind="_agentIdToAdd">
+                                <option value="0">-- Choisir un agent --</option>
+                                @foreach (GlpiAgent agent in AgentsToAdd)
+                                {
+                                    <option value="@agent.Id">@(agent.AgentName ?? agent.DeviceId ?? agent.Hostname)</option>
+                                }
+                            </select>
+                            <button type="button" class="btn btn-primary" disabled="@(_agentIdToAdd == 0)" @onclick="AddActorAsync">
+                                <i class="ti ti-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                    break;
+
+                case "history":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
+
+                        @if (_task.Jobs.Count == 0)
+                        {
+                            <div class="glpi-config-placeholder">
+                                <i class="ti ti-history-toggle"></i>
+                                <p class="mb-0">Cette tâche n'a jamais été lancée.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Agent</th>
+                                            <th>Statut</th>
+                                            <th>Créé le</th>
+                                            <th>Démarré le</th>
+                                            <th>Terminé le</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (NetworkTaskJob job in _task.Jobs.OrderByDescending(j => j.CreatedAt))
+                                        {
+                                            <tr>
+                                                <td>@(job.Agent?.AgentName ?? job.Agent?.DeviceId ?? job.Agent?.Hostname ?? "—")</td>
+                                                <td><span class="badge @StatusBadgeClass(job.Status)">@StatusLabel(job.Status)</span></td>
+                                                <td>@job.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@(job.StartedAt is { } started ? started.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                                <td>@(job.CompletedAt is { } completed ? completed.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                                <td class="text-end">
+                                                    @if (!string.IsNullOrWhiteSpace(job.Log))
+                                                    {
+                                                        <button type="button" class="btn btn-sm" @onclick="() => ToggleLog(job.Id)">
+                                                            <i class="ti ti-file-text me-1"></i>Journal
+                                                        </button>
+                                                    }
+                                                </td>
+                                            </tr>
+                                            @if (_expandedJobId == job.Id && !string.IsNullOrWhiteSpace(job.Log))
+                                            {
+                                                <tr>
+                                                    <td colspan="6">
+                                                        <div class="glpi-job-log">@RenderLog(job.Log)</div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+}

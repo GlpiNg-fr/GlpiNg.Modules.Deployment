@@ -28,6 +28,14 @@ public static class DeploymentModuleServiceCollectionExtensions
         // DeploymentJob pour tous les agents du groupe cible — voir DeploymentTaskLaunchService.
         services.AddScoped<DeploymentTaskLaunchService>();
 
+        // Construction du JSON de job réseau (Découverte réseau / Inventaire réseau SNMP) au
+        // format attendu par GLPI-Agent — voir NetworkJobJsonBuilder.
+        services.AddSingleton<NetworkJobJsonBuilder>();
+
+        // Lancement d'une NetworkTask (page /tools/deployments/networktasks) : crée un
+        // NetworkTaskJob par agent acteur — voir NetworkTaskLaunchService.
+        services.AddScoped<NetworkTaskLaunchService>();
+
         // Alimente l'onglet "Tâches / groupes" de la fiche Ordinateur (module Inventory) sans
         // que celui-ci dépende du module Déploiement — voir IComputerDeploymentTasksProvider
         // (GlpiNg.Modules.Abstractions), même principe qu'IMenuProvider.

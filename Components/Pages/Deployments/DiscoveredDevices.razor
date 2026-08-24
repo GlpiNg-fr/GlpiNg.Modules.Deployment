@@ -1,0 +1,105 @@
+@page "/tools/deployments/discovered-devices"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="discovereddevices" />
+
+<div class="glpi-list-page">
+
+@if (_message is not null)
+{
+    <div class="alert @(_messageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+        <i class="ti @(_messageIsError ? "ti-alert-triangle" : "ti-circle-check") me-1"></i>@_message
+        <a class="btn-close" @onclick="@(() => _message = null)"></a>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <div class="btn-list">
+            <select class="form-select" style="max-width: 220px;" value="@_statusFilter" @onchange="OnStatusFilterChanged">
+                <option value="">Tous les statuts</option>
+                <option value="@DiscoveredDeviceStatus.New">Nouveaux</option>
+                <option value="@DiscoveredDeviceStatus.Imported">Importés</option>
+                <option value="@DiscoveredDeviceStatus.Ignored">Ignorés</option>
+            </select>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Adresse IP</th>
+                    <th>Adresse MAC</th>
+                    <th>Nom d'hôte</th>
+                    <th>Type deviné</th>
+                    <th>Découvert via</th>
+                    <th>Vu la première fois</th>
+                    <th>Vu la dernière fois</th>
+                    <th>Statut</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_devices.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-secondary py-4">Aucun équipement réseau découvert.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (DiscoveredNetworkDevice device in _devices)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@device.IpAddress</td>
+                            <td>@(device.MacAddress ?? "—")</td>
+                            <td>@(device.Hostname ?? "—")</td>
+                            <td>@(device.GuessedType ?? "—")</td>
+                            <td>
+                                @if (device.DiscoveredViaNetworkTask is not null)
+                                {
+                                    <a href="@($"/tools/deployments/networktasks/{device.DiscoveredViaNetworkTask.Id}")">@device.DiscoveredViaNetworkTask.Name</a>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                            </td>
+                            <td>@device.FirstSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@device.LastSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="badge @StatusBadgeClass(device.Status)">@StatusLabel(device.Status)</span></td>
+                            <td class="text-end">
+                                @if (device.Status == DiscoveredDeviceStatus.New)
+                                {
+                                    <div class="btn-list justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => PromoteAsync(device)">
+                                            <i class="ti ti-arrow-big-right-lines me-1"></i>Promouvoir
+                                        </button>
+                                        <button type="button" class="btn btn-sm" @onclick="() => IgnoreAsync(device)">
+                                            <i class="ti ti-eye-off me-1"></i>Ignorer
+                                        </button>
+                                    </div>
+                                }
+                                else if (device.Status == DiscoveredDeviceStatus.Imported && device.PromotedNetworkEquipment is not null)
+                                {
+                                    <a href="@($"/parc/network-equipments/{device.PromotedNetworkEquipment.Id}")">Voir la fiche</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

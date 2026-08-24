@@ -65,10 +65,32 @@
                     <i class="ti ti-git-branch me-1"></i>Règles
                 </span>
             </li>
-            <li class="nav-item">
-                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="Pas encore disponible">
+            <li class="nav-item dropdown">
+                <button type="button" class="nav-link dropdown-toggle @(IsReseauSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="ti ti-router me-1"></i>Réseau
-                </span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item @(Current == "ipranges" ? "active" : "")" href="/tools/deployments/ipranges">
+                            <i class="ti ti-list-numbers me-2"></i>Plages IP
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "snmpcredentials" ? "active" : "")" href="/tools/deployments/snmpcredentials">
+                            <i class="ti ti-key me-2"></i>Identifiants SNMP
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "networktasks" ? "active" : "")" href="/tools/deployments/networktasks">
+                            <i class="ti ti-radar-2 me-2"></i>Tâches réseau
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "discovereddevices" ? "active" : "")" href="/tools/deployments/discovered-devices">
+                            <i class="ti ti-devices-search me-2"></i>Actifs non gérés
+                        </a>
+                    </li>
+                </ul>
             </li>
             <li class="nav-item dropdown">
                 <button type="button" class="nav-link dropdown-toggle @(IsDeploySection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
@@ -104,9 +126,10 @@
 @code {
     /// <summary>
     /// Clef de la page active : "dashboard", "computergroups", "deploymentconfig", "tasks",
-    /// "supervision", "collects", "timeslots", "packages", "mirrors" ou "interactiontemplates".
+    /// "supervision", "collects", "timeslots", "packages", "mirrors", "interactiontemplates",
+    /// "ipranges", "snmpcredentials", "networktasks" ou "discovereddevices".
     /// Détermine à la fois l'onglet du haut mis en évidence et, pour les sous-pages des menus
-    /// déroulants "Général"/"Tâches"/"Déployer", l'entrée active dans ces sous-menus.
+    /// déroulants "Général"/"Tâches"/"Déployer"/"Réseau", l'entrée active dans ces sous-menus.
     /// </summary>
     [Parameter, EditorRequired]
     public string Current { get; set; } = string.Empty;
@@ -114,4 +137,5 @@
     private bool IsTasksSection => Current is "tasks" or "supervision" or "collects" or "timeslots";
     private bool IsGeneralSection => Current is "agents" or "computergroups" or "deploymentconfig";
     private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates";
+    private bool IsReseauSection => Current is "ipranges" or "snmpcredentials" or "networktasks" or "discovereddevices";
 }

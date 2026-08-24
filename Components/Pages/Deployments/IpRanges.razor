@@ -1,0 +1,120 @@
+@page "/tools/deployments/ipranges"
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Déploiements</PageTitle>
+
+<DeploymentTopMenu Current="ipranges" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <label class="form-check m-0 px-2" title="Tout sélectionner">
+            <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                   @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+        </label>
+
+        <div class="btn-list align-items-center">
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count plage(s) sélectionnée(s) ?</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" @onclick="OpenCreateModalAsync">
+                <i class="ti ti-plus me-1"></i>Nouvelle plage IP
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th>Nom</th>
+                    <th>Début de la plage IP</th>
+                    <th>Fin de la plage IP</th>
+                    <th>Commentaires</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_ranges.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aucune plage IP.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (IpRange range in _ranges)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(range.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(range.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="#" @onclick="@(() => OpenEditModalAsync(range))" @onclick:preventDefault class="text-reset fw-semibold">
+                                    <i class="ti ti-list-numbers me-1 text-secondary"></i>@range.Name
+                                </a>
+                            </td>
+                            <td>@range.StartIp</td>
+                            <td>@range.EndIp</td>
+                            <td>@(range.Comment ?? "—")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="ipRangeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-list-numbers me-2"></i>@(_editingId is null ? "Nouvel élément" : "Modifier") - Plages IP</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="glpi-fiche-field">
+                    <label>Nom</label>
+                    <input class="form-control" @bind="_editForm.Name" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Début de la plage IP</label>
+                    <input class="form-control" placeholder="ex: 10.0.0.1" @bind="_editForm.StartIp" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Fin de la plage IP</label>
+                    <input class="form-control" placeholder="ex: 10.0.0.254" @bind="_editForm.EndIp" @bind:event="oninput" />
+                </div>
+                <div class="glpi-fiche-field">
+                    <label>Commentaires</label>
+                    <textarea class="form-control" rows="3" @bind="_editForm.Comment"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning"
+                        disabled="@(string.IsNullOrWhiteSpace(_editForm.Name) || string.IsNullOrWhiteSpace(_editForm.StartIp) || string.IsNullOrWhiteSpace(_editForm.EndIp))"
+                        @onclick="SaveAsync">
+                    <i class="ti ti-check me-1"></i>@(_editingId is null ? "Ajouter" : "Enregistrer")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,3 @@
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
@@ -230,92 +227,14 @@ public partial class TaskDetail : ComponentBase, IAsyncDisposable
         _expandedJobId = _expandedJobId == jobId ? null : jobId;
     }
 
-    // Journal brut de l'agent, ligne par ligne : "[HH:mm:ss] [phase] message". On extrait
-    // l'horodatage et la phase pour les styler à part (voir .glpi-log-time/.glpi-log-tag) et on
-    // colore la ligne entière selon son issue (ok/succès en vert, ko/erreur en rouge, séparateurs
-    // "====" atténués) pour que le regard retrouve immédiatement les étapes en échec dans un long
-    // journal. Tout le texte libre passe par HtmlEncode avant d'être réinjecté, la seule structure
-    // ajoutée étant les balises <div>/<span> ci-dessous.
-    private static readonly Regex LogLinePrefixRegex = new(
-        @"^\[(?<time>\d{2}:\d{2}:\d{2})\]\s*(?:\[(?<tag>[a-zA-Z]+)\]\s*)?(?<rest>.*)$",
-        RegexOptions.Compiled);
+    // Journal et aperçu de créneau horaire : voir AgentLogFormatter.RenderLog / TimeSlotHelper.Tooltip
+    // (Services/), extraits d'ici en classes statiques partagées pour être réutilisés par
+    // NetworkTaskDetail.razor.cs sans dupliquer ~50 lignes de regex/HTML.
+    private static MarkupString RenderLog(string log) => AgentLogFormatter.RenderLog(log);
 
-    private static MarkupString RenderLog(string log)
-    {
-        StringBuilder html = new();
+    private string TimeSlotTooltip(int? timeSlotId) => TimeSlotHelper.Tooltip(_availableTimeSlots, timeSlotId);
 
-        foreach (string rawLine in log.Replace("\r\n", "\n").Split('\n'))
-        {
-            string line = rawLine.TrimEnd('\r');
-            string trimmed = line.Trim();
-
-            string lineClass = trimmed.Length > 0 && trimmed.All(c => c == '=')
-                ? "glpi-log-line glpi-log-sep"
-                : Regex.IsMatch(line, @"\(ok\)\s*$", RegexOptions.IgnoreCase) || line.Contains("success", StringComparison.OrdinalIgnoreCase)
-                    ? "glpi-log-line glpi-log-ok"
-                    : Regex.IsMatch(line, @"\(ko\)\s*$", RegexOptions.IgnoreCase)
-                      || line.Contains("error", StringComparison.OrdinalIgnoreCase)
-                      || line.Contains("failed", StringComparison.OrdinalIgnoreCase)
-                        ? "glpi-log-line glpi-log-error"
-                        : "glpi-log-line";
-
-            html.Append("<div class=\"").Append(lineClass).Append("\">");
-
-            Match match = LogLinePrefixRegex.Match(line);
-            if (match.Success)
-            {
-                html.Append("<span class=\"glpi-log-time\">[").Append(WebUtility.HtmlEncode(match.Groups["time"].Value)).Append("]</span> ");
-                if (match.Groups["tag"].Success)
-                {
-                    html.Append("<span class=\"glpi-log-tag\">[").Append(WebUtility.HtmlEncode(match.Groups["tag"].Value)).Append("]</span> ");
-                }
-
-                html.Append(WebUtility.HtmlEncode(match.Groups["rest"].Value));
-            }
-            else
-            {
-                html.Append(WebUtility.HtmlEncode(line));
-            }
-
-            html.Append("</div>");
-        }
-
-        return new MarkupString(html.ToString());
-    }
-
-    // Contenu du bouton "i" à côté des selects de créneau horaire (Créneau horaire de
-    // préparation/d'exécution) : aperçu textuel des entrées du créneau sélectionné, faute d'un
-    // composant popover dédié.
-    private string TimeSlotTooltip(int? timeSlotId)
-    {
-        if (timeSlotId is not { } id)
-        {
-            return "Aucun créneau sélectionné.";
-        }
-
-        TimeSlot? slot = _availableTimeSlots.FirstOrDefault(s => s.Id == id);
-        if (slot is null || slot.Entries.Count == 0)
-        {
-            return "Ce créneau n'a aucune entrée configurée.";
-        }
-
-        return string.Join(", ", slot.Entries
-            .OrderBy(e => e.DayOfWeek)
-            .ThenBy(e => e.StartTime)
-            .Select(e => $"{DayLabel(e.DayOfWeek)} {e.StartTime.ToString("HH:mm")}-{e.EndTime.ToString("HH:mm")}"));
-    }
-
-    private static string DayLabel(DayOfWeek day) => day switch
-    {
-        DayOfWeek.Monday => "Lundi",
-        DayOfWeek.Tuesday => "Mardi",
-        DayOfWeek.Wednesday => "Mercredi",
-        DayOfWeek.Thursday => "Jeudi",
-        DayOfWeek.Friday => "Vendredi",
-        DayOfWeek.Saturday => "Samedi",
-        DayOfWeek.Sunday => "Dimanche",
-        _ => day.ToString()
-    };
+    private static string DayLabel(DayOfWeek day) => TimeSlotHelper.DayLabel(day);
 
     private static string WakeUpIntervalLabel(int minutes) => minutes == 0 ? "Jamais" : $"{minutes} min";
 
