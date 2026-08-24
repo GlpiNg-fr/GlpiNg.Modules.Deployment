@@ -69,7 +69,23 @@ public enum DeployCriterionLink
     Or
 }
 
-public class DeployComputerGroupCriterion
+/// <summary>
+/// Forme commune à un critère de <see cref="DeployComputerGroup"/> (groupe dynamique) et à un
+/// critère de <see cref="DeploymentRule"/> (voir Models/DeploymentRule.cs) : les deux réutilisent
+/// les mêmes champ/opérateur/lien sur <c>Computer</c>, évalués par le même moteur
+/// (<see cref="Services.DeployGroupCriteriaEvaluator"/>, généralisé sur cette interface) plutôt
+/// que de dupliquer la logique de correspondance.
+/// </summary>
+public interface IDeployCriterion
+{
+    int SortOrder { get; }
+    DeployCriterionLink Link { get; }
+    DeployCriterionField Field { get; }
+    DeployCriterionOperator Operator { get; }
+    string? Value { get; }
+}
+
+public class DeployComputerGroupCriterion : IDeployCriterion
 {
     public int Id { get; set; }
     public int DeployComputerGroupId { get; set; }

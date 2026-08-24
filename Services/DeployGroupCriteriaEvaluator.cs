@@ -4,14 +4,17 @@ using GlpiNg.Modules.Inventory.Models;
 namespace GlpiNg.Modules.Deployment.Services;
 
 /// <summary>
-/// Calcule l'appartenance d'un ordinateur à un groupe dynamique à partir de sa liste de
-/// <see cref="DeployComputerGroupCriterion"/>, évaluée en mémoire (voir la remarque sur
-/// <see cref="DeployComputerGroup"/> : ce n'est pas le moteur de règles générique de GLPI).
+/// Calcule si un ordinateur correspond à une liste de <see cref="IDeployCriterion"/>, évaluée en
+/// mémoire (voir la remarque sur <see cref="DeployComputerGroup"/> : ce n'est pas le moteur de
+/// règles générique de GLPI). Généralisé sur l'interface plutôt que sur
+/// <see cref="DeployComputerGroupCriterion"/> directement pour être réutilisé tel quel par
+/// <see cref="DeploymentRuleCriterion"/> (voir Models/DeploymentRule.cs) — mêmes champ/opérateur/
+/// lien, pas de raison de dupliquer cette logique.
 /// </summary>
 public static class DeployGroupCriteriaEvaluator
 {
-    /// <summary>Un groupe dynamique sans aucun critère ne contient aucun ordinateur (comportement le moins surprenant).</summary>
-    public static bool Matches(Computer computer, IReadOnlyList<DeployComputerGroupCriterion> criteria)
+    /// <summary>Une liste de critères vide ne correspond à aucun ordinateur (comportement le moins surprenant, ex. groupe dynamique sans critère).</summary>
+    public static bool Matches<TCriterion>(Computer computer, IReadOnlyList<TCriterion> criteria) where TCriterion : IDeployCriterion
     {
         if (criteria.Count == 0)
         {
@@ -19,7 +22,7 @@ public static class DeployGroupCriteriaEvaluator
         }
 
         bool? result = null;
-        foreach (DeployComputerGroupCriterion criterion in criteria.OrderBy(c => c.SortOrder))
+        foreach (TCriterion criterion in criteria.OrderBy(c => c.SortOrder))
         {
             bool matches = EvaluateSingle(computer, criterion);
             result = result is null
@@ -30,10 +33,10 @@ public static class DeployGroupCriteriaEvaluator
         return result ?? false;
     }
 
-    public static List<Computer> Filter(IEnumerable<Computer> computers, IReadOnlyList<DeployComputerGroupCriterion> criteria) =>
+    public static List<Computer> Filter<TCriterion>(IEnumerable<Computer> computers, IReadOnlyList<TCriterion> criteria) where TCriterion : IDeployCriterion =>
         computers.Where(c => Matches(c, criteria)).ToList();
 
-    private static bool EvaluateSingle(Computer computer, DeployComputerGroupCriterion criterion)
+    private static bool EvaluateSingle(Computer computer, IDeployCriterion criterion)
     {
         string? fieldValue = criterion.Field switch
         {
