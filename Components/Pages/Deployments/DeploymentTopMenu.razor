@@ -58,6 +58,11 @@
                             <i class="ti ti-calendar-time me-2"></i>Créneau horaire
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "wakeonlantasks" ? "active" : "")" href="/tools/deployments/wakeonlan">
+                            <i class="ti ti-plug-connected me-2"></i>Réveil réseau (WakeOnLan)
+                        </a>
+                    </li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -126,15 +131,15 @@
 @code {
     /// <summary>
     /// Clef de la page active : "dashboard", "computergroups", "deploymentconfig", "tasks",
-    /// "supervision", "collects", "timeslots", "rules", "packages", "mirrors", "interactiontemplates",
-    /// "ipranges", "snmpcredentials", "networktasks" ou "discovereddevices".
+    /// "supervision", "collects", "timeslots", "wakeonlantasks", "rules", "packages", "mirrors",
+    /// "interactiontemplates", "ipranges", "snmpcredentials", "networktasks" ou "discovereddevices".
     /// Détermine à la fois l'onglet du haut mis en évidence et, pour les sous-pages des menus
     /// déroulants "Général"/"Tâches"/"Déployer"/"Réseau", l'entrée active dans ces sous-menus.
     /// </summary>
     [Parameter, EditorRequired]
     public string Current { get; set; } = string.Empty;
 
-    private bool IsTasksSection => Current is "tasks" or "supervision" or "collects" or "timeslots";
+    private bool IsTasksSection => Current is "tasks" or "supervision" or "collects" or "timeslots" or "wakeonlantasks";
     private bool IsGeneralSection => Current is "agents" or "computergroups" or "deploymentconfig";
     private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates";
     private bool IsReseauSection => Current is "ipranges" or "snmpcredentials" or "networktasks" or "discovereddevices";

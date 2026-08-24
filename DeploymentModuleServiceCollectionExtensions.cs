@@ -36,6 +36,14 @@ public static class DeploymentModuleServiceCollectionExtensions
         // NetworkTaskJob par agent acteur — voir NetworkTaskLaunchService.
         services.AddScoped<NetworkTaskLaunchService>();
 
+        // Construction du JSON de job de réveil réseau au format attendu par GLPI-Agent — voir
+        // WakeOnLanJobJsonBuilder.
+        services.AddSingleton<WakeOnLanJobJsonBuilder>();
+
+        // Lancement d'une WakeOnLanTask (page /tools/deployments/wakeonlan) : résout les cibles en
+        // adresses MAC et crée un WakeOnLanTaskJob par agent relais — voir WakeOnLanTaskLaunchService.
+        services.AddScoped<WakeOnLanTaskLaunchService>();
+
         // Alimente l'onglet "Tâches / groupes" de la fiche Ordinateur (module Inventory) sans
         // que celui-ci dépende du module Déploiement — voir IComputerDeploymentTasksProvider
         // (GlpiNg.Modules.Abstractions), même principe qu'IMenuProvider.
