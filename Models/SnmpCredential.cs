@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>Version du protocole SNMP (front/snmpcredential.form.php côté GLPI core).</summary>
@@ -42,8 +44,14 @@ public enum SnmpPrivProtocol
 /// stockées et affichées en clair, au même niveau de confiance que le reste de ce module (aucune
 /// autre entité de GlpiNg ne masque de secret en édition).
 /// </summary>
-public class SnmpCredential
+public class SnmpCredential : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public SnmpVersion Version { get; set; } = SnmpVersion.V2c;

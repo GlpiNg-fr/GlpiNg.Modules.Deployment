@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Inventory.Models;
 
 namespace GlpiNg.Modules.Deployment.Models;
@@ -18,8 +19,14 @@ public enum DiscoveredDeviceStatus
 /// Corrélation entre deux scans (voir NetworkDeviceImportService) : par <see cref="MacAddress"/>
 /// quand présente (survit à un changement d'IP DHCP), sinon par <see cref="IpAddress"/>.
 /// </summary>
-public class DiscoveredNetworkDevice
+public class DiscoveredNetworkDevice : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string IpAddress { get; set; }
     public string? MacAddress { get; set; }

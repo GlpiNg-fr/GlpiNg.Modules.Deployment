@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Inventory.Models;
 
 namespace GlpiNg.Modules.Deployment.Models;
@@ -36,8 +37,14 @@ public enum WakeOnLanTaskTargetType
 /// <see cref="Computer.NetworkPorts"/>, seule source de MAC — <see cref="GlpiAgent"/> n'en porte
 /// pas), un <see cref="WakeOnLanTaskJob"/> par agent relais.
 /// </summary>
-public class WakeOnLanTask
+public class WakeOnLanTask : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

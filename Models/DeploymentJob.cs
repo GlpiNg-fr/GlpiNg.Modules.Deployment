@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Inventory.Models;
 
@@ -41,8 +42,14 @@ public class DeploymentJob
 /// <summary>
 /// Package de déploiement : fichiers (avec hash SHA512) + actions (cmd, move, copy, delete, mkdir).
 /// </summary>
-public class DeploymentPackage
+public class DeploymentPackage : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }

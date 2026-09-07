@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>
@@ -6,8 +8,14 @@ namespace GlpiNg.Modules.Deployment.Models;
 /// de ses propres <see cref="DeploymentUserInteractionEntry"/> (voir DeploymentPackageEntries.cs) ;
 /// ce gabarit n'en fournit qu'un modèle de départ, il n'y est pas rattaché en base.
 /// </summary>
-public class DeploymentUserInteractionTemplate
+public class DeploymentUserInteractionTemplate : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public DeploymentUserInteractionType Type { get; set; } = DeploymentUserInteractionType.InfoMessage;

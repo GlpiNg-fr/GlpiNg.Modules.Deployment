@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>Critère de correspondance entre un agent et un serveur miroir (onglet "Gestion de
@@ -16,8 +18,14 @@ public enum DeploymentMirrorMatchMode
 /// tout servir depuis le serveur GlpiNg central. Pas encore consommé par <c>DeployJobJsonBuilder</c> :
 /// ce référentiel existe pour la gestion des serveurs miroirs eux-mêmes.
 /// </summary>
-public class DeploymentMirrorServer
+public class DeploymentMirrorServer : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public required string Url { get; set; }

@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>
@@ -7,8 +9,14 @@ namespace GlpiNg.Modules.Deployment.Models;
 /// (voir DeploymentJob) : ce référentiel existe pour la gestion des créneaux eux-mêmes,
 /// pas encore rattaché à un ordonnanceur.
 /// </summary>
-public class TimeSlot
+public class TimeSlot : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

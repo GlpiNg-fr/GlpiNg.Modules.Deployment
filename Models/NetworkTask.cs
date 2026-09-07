@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Inventory.Models;
 
 namespace GlpiNg.Modules.Deployment.Models;
@@ -27,8 +28,14 @@ public enum NetworkTaskMethod
 /// DeploymentTaskTarget), les <see cref="Actors"/> d'une NetworkTask référencent directement
 /// l'agent GLPI-Agent qui exécute le scan — même pattern que DeploymentJob.AgentId.
 /// </summary>
-public class NetworkTask
+public class NetworkTask : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

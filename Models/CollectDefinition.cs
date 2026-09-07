@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>Type de source pour une définition de collecte (front/collect.php côté GLPI-Inventory).</summary>
@@ -15,8 +17,14 @@ public enum CollectType
 /// l'agent via le protocole /inventory — la collecte de "additional-content" n'est pas
 /// implémentée côté <c>AgentController</c>, voir la remarque d'adaptation de ce contrôleur.
 /// </summary>
-public class CollectDefinition
+public class CollectDefinition : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

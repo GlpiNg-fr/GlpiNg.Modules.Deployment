@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>
@@ -21,8 +23,14 @@ namespace GlpiNg.Modules.Deployment.Models;
 /// exclusives — un seul lieu, refuser ou pas), assigner des paquets est cumulatif et sans
 /// conflit — TOUTES les règles actives correspondantes s'appliquent, comme ComputerRule.
 /// </summary>
-public class DeploymentRule
+public class DeploymentRule : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

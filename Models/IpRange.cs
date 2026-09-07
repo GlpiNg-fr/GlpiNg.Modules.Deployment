@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Modules.Deployment.Models;
 
 /// <summary>
@@ -7,8 +9,14 @@ namespace GlpiNg.Modules.Deployment.Models;
 /// parse/itère jamais lui-même, il les transmet telles quelles à l'agent qui effectue le scan
 /// (voir Services/NetworkJobJsonBuilder.cs).
 /// </summary>
-public class IpRange
+public class IpRange : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public required string StartIp { get; set; }

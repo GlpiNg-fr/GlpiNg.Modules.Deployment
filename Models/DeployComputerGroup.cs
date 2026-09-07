@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Inventory.Models;
 
 namespace GlpiNg.Modules.Deployment.Models;
@@ -18,8 +19,14 @@ public enum DeployComputerGroupType
 /// sous-ensemble directement porté par <see cref="Computer"/> (voir DeployCriterionField) — pas de
 /// jointure sur composants/logiciels/ports réseau.
 /// </summary>
-public class DeployComputerGroup
+public class DeployComputerGroup : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }
