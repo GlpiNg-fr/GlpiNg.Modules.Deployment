@@ -23,7 +23,7 @@ public partial class Index : ComponentBase
         await using DbContext db = await DbFactory.CreateDbContextAsync();
 
         // "Inventorié" au sens GLPI-Agent : un ordinateur rattaché à un agent, c'est-à-dire
-        // effectivement remonté par le protocole /glpi-agent plutôt que créé/importé autrement.
+        // effectivement remonté par le protocole /inventory plutôt que créé/importé autrement.
         int inventoriedComputers = await db.Set<Computer>().CountAsync(c => c.AgentId != null);
         int agentCount = await db.Set<GlpiAgent>().CountAsync();
         int packageCount = await db.Set<DeploymentPackage>().CountAsync();

@@ -99,7 +99,7 @@ public class DeploymentPackageFile
 }
 
 /// <summary>Fragment d'un <see cref="DeploymentPackageFile"/> (voir sa doc). Servi individuellement
-/// par <c>GET glpi-agent/deploy/file/part/{sha512}</c>, référencé dans le champ "multiparts" du
+/// par <c>GET inventory/deploy/file/part/{sha512}</c>, référencé dans le champ "multiparts" du
 /// job JSON construit par <see cref="Services.DeployJobJsonBuilder"/>.</summary>
 public class DeploymentPackageFilePart
 {

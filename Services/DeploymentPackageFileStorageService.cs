@@ -8,8 +8,8 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// <summary>
 /// Écrit sur disque (sous <c>PackageStorage:RootPath</c>) les fichiers uploadés depuis
 /// l'admin des paquets de déploiement, et calcule les hashs SHA512 utilisés comme clefs par
-/// <c>AgentController</c> pour servir <c>GET glpi-agent/deploy/file/{sha512}</c> (fichier
-/// entier, reconstitué à la volée) et <c>GET glpi-agent/deploy/file/part/{sha512}</c> (un
+/// <c>AgentController</c> pour servir <c>GET inventory/deploy/file/{sha512}</c> (fichier
+/// entier, reconstitué à la volée) et <c>GET inventory/deploy/file/part/{sha512}</c> (un
 /// fragment).
 ///
 /// Chaque fichier est découpé en fragments de taille fixe (<c>PackageStorage:PartSizeBytes</c>,

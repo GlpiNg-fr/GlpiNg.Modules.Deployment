@@ -4,7 +4,7 @@ namespace GlpiNg.Modules.Deployment.Models;
 /// Onglets "Configuration générale" et "Gestion de paquets" du module de déploiement (voir
 /// Deployments/GeneralConfig.razor), calqués sur front/config.form.php de GLPI-Inventory.
 /// Les réglages "SSL seulement pour l'agent" et "Port de l'agent" de GLPI n'ont pas
-/// d'équivalent ici : GlpiNg n'expose qu'un seul endpoint /glpi-agent sur l'écoute Kestrel
+/// d'équivalent ici : GlpiNg n'expose qu'un seul endpoint /inventory sur l'écoute Kestrel
 /// déjà configurée depuis /config, donc ces deux champs sont volontairement omis. Le champ
 /// "Supprimer les tâches à la demande réussies après" n'a pas non plus d'équivalent : GlpiNg ne
 /// distingue pas les tâches "à la demande" des tâches planifiées (<see cref="TaskLogRetentionDays"/>

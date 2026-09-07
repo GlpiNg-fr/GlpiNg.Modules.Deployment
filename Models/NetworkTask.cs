@@ -14,7 +14,7 @@ public enum NetworkTaskMethod
 
 /// <summary>
 /// Tâche de scan réseau (découverte ou inventaire SNMP), exécutée par un agent GLPI-Agent réel
-/// qui reçoit la spec (plages IP + identifiants SNMP) via le protocole /glpi-agent et remonte ses
+/// qui reçoit la spec (plages IP + identifiants SNMP) via le protocole /inventory et remonte ses
 /// résultats sous forme de <see cref="DiscoveredNetworkDevice"/> (voir
 /// Services/NetworkJobJsonBuilder.cs et AgentController). Entité parallèle à
 /// <see cref="DeploymentTask"/> plutôt qu'une extension de celle-ci : DeploymentTask/DeploymentJob

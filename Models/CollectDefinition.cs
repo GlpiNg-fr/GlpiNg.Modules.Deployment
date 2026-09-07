@@ -12,7 +12,7 @@ public enum CollectType
 /// Définition de collecte de données additionnelles auprès de l'agent (registre Windows, WMI,
 /// recherche de fichier), au-delà de l'inventaire standard. GlpiNg stocke ces définitions pour
 /// leur gestion (CRUD, à l'image de front/collect.form.php) mais ne les transmet pas encore à
-/// l'agent via le protocole /glpi-agent — la collecte de "additional-content" n'est pas
+/// l'agent via le protocole /inventory — la collecte de "additional-content" n'est pas
 /// implémentée côté <c>AgentController</c>, voir la remarque d'adaptation de ce contrôleur.
 /// </summary>
 public class CollectDefinition
