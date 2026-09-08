@@ -1,4 +1,5 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
+using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,7 +27,7 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// quel que soit le réglage de buffer. Voir
 /// https://learn.microsoft.com/aspnet/core/blazor/file-uploads#server-side-signalr-message-size-limit.
 /// </summary>
-public class DeploymentPackageFileStorageService(IConfiguration configuration)
+public class DeploymentPackageFileStorageService(IConfiguration configuration, IStoragePaths storagePaths)
 {
     // Simple copie disque-à-disque HTTP (plus de contrainte SignalR ici) : un buffer généreux
     // maximise le débit pour les gros paquets.
@@ -171,7 +172,15 @@ public class DeploymentPackageFileStorageService(IConfiguration configuration)
     /// d'entrées : <c>0b5161778c...</c> → <c>0/0b/0b5161778c...</c>.</summary>
     private static string ShardedPartStoragePath(string sha512) => $"{sha512[..1]}/{sha512[..2]}/{sha512}";
 
-    private string RootPath() => configuration["PackageStorage:RootPath"] ?? "PackageStorage";
+    /// <summary>
+    /// Emplacement des fragments. <c>PackageStorage:RootPath</c> reste prioritaire quand il est
+    /// renseigné : une installation qui l'avait fixé garde ses fichiers là où ils sont, plutôt
+    /// que de les voir disparaître d'un coup de mise à jour. Sinon, le dossier « packages » sous
+    /// la racine de stockage configurée dans Général &gt; Système.
+    /// </summary>
+    private string RootPath() => configuration["PackageStorage:RootPath"] is { Length: > 0 } configured
+        ? configured
+        : storagePaths.Packages;
 
     private long PartSizeBytes() => configuration.GetValue<long?>("PackageStorage:PartSizeBytes") ?? DefaultPartSizeBytes;
 }
