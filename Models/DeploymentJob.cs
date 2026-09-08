@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Entities;
+﻿using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Inventory.Models;
 
@@ -53,6 +53,11 @@ public class DeploymentPackage : IEntityScoped
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
+
+    /// <summary>Id d'origine dans la base GLPI source (table du plugin d'inventaire) — même
+    /// principe que Computer.SourceGlpiId : c'est ce qui rend l'import idempotent, un second
+    /// passage mettant à jour au lieu de dupliquer.</summary>
+    public int? SourceGlpiId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>

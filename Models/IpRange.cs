@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Entities;
+﻿using GlpiNg.Modules.Abstractions.Entities;
 
 namespace GlpiNg.Modules.Deployment.Models;
 
@@ -19,6 +19,11 @@ public class IpRange : IEntityScoped
 
     public int Id { get; set; }
     public required string Name { get; set; }
+
+    /// <summary>Id d'origine dans la base GLPI source (table du plugin d'inventaire) — même
+    /// principe que Computer.SourceGlpiId : c'est ce qui rend l'import idempotent, un second
+    /// passage mettant à jour au lieu de dupliquer.</summary>
+    public int? SourceGlpiId { get; set; }
     public required string StartIp { get; set; }
     public required string EndIp { get; set; }
     public string? Comment { get; set; }
