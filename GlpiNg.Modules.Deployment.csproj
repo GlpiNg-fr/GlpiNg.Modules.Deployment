@@ -24,13 +24,13 @@
       restent la responsabilité du projet hôte. Voir Controllers/DeploymentPackageFilesController.cs
       et Components/Pages/Deployments/*.razor.cs.
     -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <!-- AsSplitQuery() éventuel vit dans le provider relationnel plutôt que dans le
          paquet EF Core de base — même raison que GlpiNg.Modules.Inventory.csproj. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <!-- Composant ToastService (confirmations/erreurs de formulaire), consommé par
          Components/Pages/Deployments/Detail.razor.cs — même paquet que GlpiNg.Web. -->
-    <PackageReference Include="Blazor.Bootstrap" Version="3.5.0" />
+    <PackageReference Include="Blazor.Bootstrap" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
