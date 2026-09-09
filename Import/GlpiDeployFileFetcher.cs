@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Net.Http;
 
 namespace GlpiNg.Modules.Deployment.Import;
@@ -8,6 +8,12 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// Répertoire des fichiers du plugin d'inventaire, vu depuis la machine GlpiNg : chemin local ou
 /// partage réseau. Route principale, parce qu'elle ne dépend d'aucune convention d'URL.
 /// </param>
+/// <param name="FilesUserName">
+/// Compte à présenter au partage réseau qui héberge <paramref name="FilesPath"/>. Optionnel : sans
+/// lui, la lecture se fait avec le compte du processus, ce qui suffit pour un chemin local ou un
+/// partage déjà accessible.
+/// </param>
+/// <param name="FilesPassword">Mot de passe associé à <paramref name="FilesUserName"/>.</param>
 /// <param name="BaseUrl">Racine HTTP de GLPI, utilisée en repli quand le disque n'est pas joignable.</param>
 /// <param name="ManifestUrlTemplate">
 /// Gabarit d'URL du manifeste d'un fichier, où <c>{base}</c> est <paramref name="BaseUrl"/> et
@@ -16,6 +22,8 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// <param name="PartUrlTemplate">Gabarit d'URL d'un fragment, mêmes marqueurs.</param>
 public sealed record GlpiDeployFileSource(
     string? FilesPath = null,
+    string? FilesUserName = null,
+    string? FilesPassword = null,
     string? BaseUrl = null,
     string? ManifestUrlTemplate = null,
     string? PartUrlTemplate = null)
@@ -62,10 +70,15 @@ public sealed record GlpiDeployFileFetchResult(string? TempFilePath, string? Fai
 /// GlpiNg, qui en recalcule le SHA-512. S'il ne correspond pas à celui attendu, c'est qu'une
 /// hypothèse était fausse — et rien n'est enregistré.
 /// </summary>
-public sealed class GlpiDeployFileFetcher(HttpClient httpClient)
+public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 {
     private Dictionary<string, string>? _repositoryIndex;
     private string? _indexedRoot;
+
+    // Session vers le partage réseau, ouverte au premier accès et gardée pour toute la durée de
+    // l'import : l'ouvrir et la refermer par fichier serait autant d'allers-retours d'authentification
+    // pour rien.
+    private NetworkShareConnection? _share;
 
     public async Task<GlpiDeployFileFetchResult> FetchAsync(
         string sha512, GlpiDeployFileSource source, CancellationToken cancellationToken = default)
@@ -84,12 +97,18 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient)
         {
             try
             {
+                EnsureShareConnected(source);
+
                 if (await FetchFromDiskAsync(sha512, source.FilesPath!, cancellationToken) is { } fromDisk)
                 {
                     return new GlpiDeployFileFetchResult(fromDisk, null);
                 }
 
                 attempts.Add("introuvable dans le répertoire des fichiers");
+            }
+            catch (ShareConnectionException ex)
+            {
+                attempts.Add($"partage réseau : {ex.Message}");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -118,6 +137,25 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient)
     }
 
     // ---- Route disque ------------------------------------------------------
+
+    /// <summary>
+    /// Ouvre la session vers le partage si des identifiants ont été fournis, une seule fois par
+    /// exécution. Sans identifiants, ou pour un chemin local, il n'y a rien à ouvrir.
+    /// </summary>
+    private void EnsureShareConnected(GlpiDeployFileSource source)
+    {
+        if (_share is not null)
+        {
+            return;
+        }
+
+        _share = NetworkShareConnection.Connect(source.FilesPath!, source.FilesUserName, source.FilesPassword, out string? failure)
+            ?? throw new ShareConnectionException(failure ?? "connexion au partage impossible");
+    }
+
+    /// <summary>Échec d'ouverture du partage, distingué d'une erreur de lecture pour que le message
+    /// rendu à l'administrateur désigne la bonne cause.</summary>
+    private sealed class ShareConnectionException(string message) : Exception(message);
 
     private async Task<string?> FetchFromDiskAsync(string sha512, string root, CancellationToken cancellationToken)
     {
@@ -293,6 +331,8 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient)
             ? new GZipStream(rewound, CompressionMode.Decompress)
             : rewound;
     }
+
+    public void Dispose() => _share?.Dispose();
 
     /// <summary>
     /// Rend lisibles bout à bout deux flux, pour rendre au fragment les octets consommés en
