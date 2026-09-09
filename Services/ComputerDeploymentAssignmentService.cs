@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Deployment;
+﻿using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
@@ -99,6 +99,23 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             {
                 Status = DeploymentAssignmentStatus.PackageNotFound,
                 ErrorMessage = "Au moins un des paquets sélectionnés n'existe plus."
+            };
+        }
+
+        // Même garde qu'au lancement d'une tâche (voir DeploymentTaskLaunchService) : un paquet dont
+        // un fichier n'a aucun fragment n'a pas son contenu, et l'agent échouerait à le télécharger.
+        List<string> incompletePackages = await db.Set<DeploymentPackage>()
+            .Where(package => packageIds.Contains(package.Id) && package.Files.Any(file => file.Parts.Count == 0))
+            .Select(package => package.Name)
+            .ToListAsync(cancellationToken);
+
+        if (incompletePackages.Count > 0)
+        {
+            return new DeploymentAssignmentResult
+            {
+                Status = DeploymentAssignmentStatus.PackageNotFound,
+                ErrorMessage = $"Contenu manquant pour : {string.Join(", ", incompletePackages)}. "
+                    + "Téléversez les fichiers de ces paquets depuis leur fiche avant de les assigner."
             };
         }
 

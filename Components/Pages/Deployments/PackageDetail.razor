@@ -1,4 +1,4 @@
-@page "/tools/deployments/package/{PackageId:int}"
+﻿@page "/tools/deployments/package/{PackageId:int}"
 @using GlpiNg.Modules.Abstractions.Deployment
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
@@ -197,7 +197,20 @@ else
                                                     <td>@file.FileName</td>
                                                     <td class="text-truncate" style="max-width: 220px;" title="@file.Sha512">@file.Sha512</td>
                                                     <td>@FormatSize(file.SizeBytes)</td>
-                                                    <td>@file.Parts.Count</td>
+                                                    <td>
+                                                        @if (file.Parts.Count == 0)
+                                                        {
+                                                            @* Cas d'un paquet repris d'une base GLPI : le fichier est
+                                                               déclaré, ses octets sont restés sur le serveur d'origine. *@
+                                                            <span class="badge bg-warning-lt" title="Contenu absent : ce paquet ne peut pas être déployé tant que le fichier n'a pas été téléversé.">
+                                                                <i class="ti ti-upload me-1"></i>À téléverser
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            @file.Parts.Count
+                                                        }
+                                                    </td>
                                                     <td class="text-end">
                                                         <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveFileAsync(file)">
                                                             <i class="ti ti-trash"></i>

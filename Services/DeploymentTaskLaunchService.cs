@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Deployment.Models;
+﻿using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,6 +58,21 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
         if (existingPackageCount != packageIds.Count)
         {
             return Fail("Au moins un des paquets associés à cette tâche n'existe plus.");
+        }
+
+        // Un fichier sans fragment est un fichier dont le contenu n'a pas été téléversé — le cas
+        // typique d'un paquet repris d'une base GLPI, dont les octets vivent sur le disque du
+        // serveur d'origine. Le job partirait quand même, avec un "multiparts" vide, et l'agent
+        // échouerait à le télécharger : l'erreur ne se verrait qu'après coup, poste par poste.
+        List<string> incompletePackages = await db.Set<DeploymentPackage>()
+            .Where(package => packageIds.Contains(package.Id) && package.Files.Any(file => file.Parts.Count == 0))
+            .Select(package => package.Name)
+            .ToListAsync(cancellationToken);
+
+        if (incompletePackages.Count > 0)
+        {
+            return Fail($"Contenu manquant pour : {string.Join(", ", incompletePackages)}. "
+                + "Téléversez les fichiers de ces paquets depuis leur fiche avant de lancer la tâche.");
         }
 
         // Une fois tous les jobs d'une tâche dans un état terminal, on refuse de la relancer sans
