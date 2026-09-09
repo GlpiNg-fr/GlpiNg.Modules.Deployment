@@ -1,4 +1,4 @@
-@page "/parc/unmanaged"
+﻿@page "/parc/unmanaged"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
@@ -68,7 +68,7 @@
                         <tr>
                             <td class="fw-semibold"><i class="ti ti-help me-1 text-secondary"></i>@device.IpAddress</td>
                             <td>@(device.Hostname ?? device.SysName ?? "—")</td>
-                            <td>@(device.MacAddress ?? "—")</td>
+                            <td>@FormatMac(device.MacAddress)</td>
                             <td>@(device.GuessedType ?? "—")</td>
                             <td>@device.LastSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td><span class="badge @StatusBadgeClass(device.Status) text-white">@StatusLabel(device.Status)</span></td>

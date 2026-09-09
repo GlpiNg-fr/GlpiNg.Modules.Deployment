@@ -1,4 +1,4 @@
-@page "/tools/deployments/discovered-devices"
+﻿@page "/tools/deployments/discovered-devices"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
@@ -62,7 +62,7 @@
                     {
                         <tr>
                             <td class="fw-semibold">@device.IpAddress</td>
-                            <td>@(device.MacAddress ?? "—")</td>
+                            <td>@FormatMac(device.MacAddress)</td>
                             <td>@(device.Hostname ?? "—")</td>
                             <td>@(device.GuessedType ?? "—")</td>
                             <td>

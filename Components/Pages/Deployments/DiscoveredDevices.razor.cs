@@ -1,3 +1,4 @@
+﻿using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
@@ -15,8 +16,19 @@ public partial class DiscoveredDevices : ComponentBase
     private string? _message;
     private bool _messageIsError;
 
+    // Forme d'écriture des adresses MAC retenue pour l'utilisateur (préférence personnelle, sinon
+    // réglage de l'instance) — voir IUserPreferences.
+    [Inject]
+    private IUserPreferences UserPreferences { get; set; } = null!;
+
+    private MacAddressFormat _macFormat = MacAddressFormatter.Fallback;
+
+    private string FormatMac(string? mac) => MacAddressFormatter.Format(mac, _macFormat) ?? "—";
+
     protected override async Task OnInitializedAsync()
     {
+        _macFormat = (await UserPreferences.GetAsync()).MacAddressFormat;
+
         await LoadAsync();
     }
 

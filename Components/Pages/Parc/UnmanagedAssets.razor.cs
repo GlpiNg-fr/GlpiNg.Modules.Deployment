@@ -1,3 +1,4 @@
+﻿using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
@@ -38,14 +39,31 @@ public partial class UnmanagedAssets : ComponentBase
     private string _search = string.Empty;
     private string _sortField = "lastseen";
     private bool _sortDescending = true;
+    // Taille de page par défaut du compte connecté (page /preferences). Injecté par l'hôte, qui
+    // seul connaît le modèle d'utilisateur — voir IUserPreferences.
+    [Inject]
+    private IUserPreferences UserPreferences { get; set; } = null!;
+
     private int _pageSize = 25;
+
+    private MacAddressFormat _macFormat = MacAddressFormatter.Fallback;
+
+    /// <summary>Adresse MAC à la forme retenue pour l'utilisateur, ou un tiret si l'équipement n'en
+    /// a pas remonté.</summary>
+    private string FormatMac(string? mac) => MacAddressFormatter.Format(mac, _macFormat) ?? "—";
     private int _currentPage = 1;
     private string? _message;
     private bool _messageIsError;
 
     private int TotalPages => _filtered.Count == 0 ? 1 : (int)Math.Ceiling(_filtered.Count / (double)_pageSize);
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        UserPreferenceValues preferences = await UserPreferences.GetAsync();
+        _pageSize = preferences.ItemsPerPage;
+        _macFormat = preferences.MacAddressFormat;
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
