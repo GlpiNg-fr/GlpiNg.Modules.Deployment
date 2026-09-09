@@ -1,6 +1,7 @@
-using GlpiNg.Modules.Abstractions.Deployment;
+﻿using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Menu;
 using GlpiNg.Modules.Deployment.Controllers;
+using GlpiNg.Modules.Deployment.Import;
 using GlpiNg.Modules.Deployment.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,11 @@ public static class DeploymentModuleServiceCollectionExtensions
         // Écriture sur disque des fichiers de paquet uploadés depuis /tools/deployments
         // (voir PackageStorage:RootPath, lu aussi par AgentController.GetDeployFile).
         services.AddScoped<DeploymentPackageFileStorageService>();
+
+        // Récupération du contenu des fichiers de paquets depuis une installation GLPI source (voir
+        // GlpiDeployFileFetcher). Client dédié : délai large, un fragment se compte en mégaoctets et
+        // la machine d'en face n'est pas forcément proche.
+        services.AddHttpClient<GlpiDeployFileFetcher>(client => client.Timeout = TimeSpan.FromMinutes(10));
 
         // Lancement d'une DeploymentTask (page /tools/deployments/tasks) : crée les
         // DeploymentJob pour tous les agents du groupe cible — voir DeploymentTaskLaunchService.
