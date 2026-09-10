@@ -21,8 +21,11 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// installation téléchargent déjà, donc celles dont on sait qu'elles fonctionnent.
 /// </param>
 /// <param name="ManifestUrlTemplate">
-/// Gabarit d'URL du manifeste d'un fichier, où <c>{base}</c> est <paramref name="BaseUrl"/> et
-/// <c>{sha512}</c> l'empreinte du fichier entier.
+/// Gabarit d'URL du manifeste d'un fichier. Marqueurs : <c>{base}</c> pour
+/// <paramref name="BaseUrl"/>, <c>{sha512}</c> pour l'empreinte, et <c>{shard}</c> pour le
+/// découpage en sous-dossiers dont GLPI se sert pour ne pas entasser des milliers de fichiers dans
+/// un seul répertoire — le premier caractère de l'empreinte, puis les deux premiers
+/// (<c>000dfe…</c> donne <c>0/00</c>).
 /// </param>
 /// <param name="PartUrlTemplate">Gabarit d'URL d'un fragment, mêmes marqueurs.</param>
 public sealed record GlpiDeployFileSource(
@@ -43,14 +46,14 @@ public sealed record GlpiDeployFileSource(
     public const string DefaultManifestUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/manifests/{sha512}";
 
     /// <inheritdoc cref="DefaultManifestUrlTemplate"/>
-    public const string DefaultPartUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/repository/{sha512}";
+    public const string DefaultPartUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/repository/{shard}/{sha512}";
 
     /// <summary>Gabarits d'un miroir, qui est déjà la racine d'un dépôt : pas de chemin de plugin à
     /// y ajouter, seulement l'empreinte.</summary>
     public const string MirrorManifestUrlTemplate = "{base}/manifests/{sha512}";
 
     /// <inheritdoc cref="MirrorManifestUrlTemplate"/>
-    public const string MirrorPartUrlTemplate = "{base}/{sha512}";
+    public const string MirrorPartUrlTemplate = "{base}/{shard}/{sha512}";
 
     public bool HasFilesPath => !string.IsNullOrWhiteSpace(FilesPath);
     public bool HasBaseUrl => !string.IsNullOrWhiteSpace(BaseUrl);
@@ -192,17 +195,15 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 
     private async Task<string?> FetchFromDiskAsync(string sha512, string root, CancellationToken cancellationToken)
     {
-        Dictionary<string, string> index = BuildIndex(root);
-
         // Un petit fichier peut être stocké entier, sans manifeste ni découpage.
-        IReadOnlyList<string> partHashes = index.TryGetValue(ManifestKey(sha512), out string? manifestPath)
+        IReadOnlyList<string> partHashes = Locate(root, sha512, manifest: true) is { } manifestPath
             ? ParseManifest(await File.ReadAllLinesAsync(manifestPath, cancellationToken))
             : [sha512];
 
         List<string> partPaths = [];
         foreach (string part in partHashes)
         {
-            if (!index.TryGetValue(part, out string? partPath))
+            if (Locate(root, part, manifest: false) is not { } partPath)
             {
                 return null;
             }
@@ -217,11 +218,50 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
     }
 
     /// <summary>
-    /// Index nom de fichier → chemin, bâti une fois par répertoire source.
+    /// Chemin d'un manifeste ou d'un fragment dans le dépôt.
     ///
-    /// Parcourir toute l'arborescence plutôt que reconstituer le chemin d'un fragment depuis son
-    /// empreinte : le découpage en sous-dossiers du dépôt est une convention interne au plugin,
-    /// qui a changé avec les versions. Chercher par nom fonctionne quelle qu'elle soit.
+    /// Les emplacements connus sont essayés en premier — GLPI range ses fichiers sous
+    /// <c>{premier caractère}/{deux premiers}/{empreinte}</c> — parce qu'un accès direct coûte une
+    /// requête au système de fichiers, là où parcourir l'arborescence d'un dépôt de plusieurs
+    /// milliers de fichiers peut prendre des minutes sur un partage réseau.
+    ///
+    /// L'index complet reste en filet de sécurité, construit seulement si aucun de ces chemins ne
+    /// répond : ce découpage est une convention interne au plugin, qui a déjà changé avec les
+    /// versions, et chercher par nom fonctionne quelle qu'elle soit.
+    /// </summary>
+    private string? Locate(string root, string sha512, bool manifest)
+    {
+        string shard = Shard(sha512).Replace('/', Path.DirectorySeparatorChar);
+
+        string[] known = manifest
+            ?
+            [
+                Path.Combine(root, "manifests", sha512),
+                Path.Combine(root, "manifests", shard, sha512),
+            ]
+            :
+            [
+                Path.Combine(root, "repository", shard, sha512),
+                Path.Combine(root, shard, sha512),
+                Path.Combine(root, "repository", sha512),
+                Path.Combine(root, sha512),
+            ];
+
+        foreach (string candidate in known)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        Dictionary<string, string> index = BuildIndex(root);
+        return index.GetValueOrDefault(manifest ? ManifestKey(sha512) : sha512);
+    }
+
+    /// <summary>
+    /// Index nom de fichier → chemin, bâti une fois par répertoire source, et seulement quand les
+    /// emplacements connus n'ont rien donné (voir <see cref="Locate"/>).
     /// </summary>
     private Dictionary<string, string> BuildIndex(string root)
     {
@@ -300,7 +340,18 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 
     private static string Format(string template, string baseUrl, string sha512) => template
         .Replace("{base}", baseUrl.TrimEnd('/'), StringComparison.Ordinal)
+        .Replace("{shard}", Shard(sha512), StringComparison.Ordinal)
         .Replace("{sha512}", sha512, StringComparison.Ordinal);
+
+    /// <summary>
+    /// Découpage en sous-dossiers d'une empreinte, tel que GLPI range son dépôt : premier
+    /// caractère, puis les deux premiers. <c>000dfeead…</c> vit sous <c>0/00/</c>.
+    ///
+    /// C'est ce qui évite d'entasser des milliers de fichiers dans un seul répertoire ; le
+    /// connaître permet d'aller droit au fichier plutôt que de parcourir l'arborescence.
+    /// </summary>
+    public static string Shard(string sha512) =>
+        sha512.Length >= 2 ? $"{sha512[0]}/{sha512[..2]}" : sha512;
 
     // ---- Commun ------------------------------------------------------------
 
