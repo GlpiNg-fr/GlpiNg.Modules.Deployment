@@ -15,6 +15,11 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// </param>
 /// <param name="FilesPassword">Mot de passe associé à <paramref name="FilesUserName"/>.</param>
 /// <param name="BaseUrl">Racine HTTP de GLPI, utilisée en repli quand le disque n'est pas joignable.</param>
+/// <param name="MirrorUrls">
+/// Serveurs de miroir déclarés par le plugin sur la base source. Essayés avant
+/// <paramref name="BaseUrl"/> : ce sont les adresses depuis lesquelles les agents de cette
+/// installation téléchargent déjà, donc celles dont on sait qu'elles fonctionnent.
+/// </param>
 /// <param name="ManifestUrlTemplate">
 /// Gabarit d'URL du manifeste d'un fichier, où <c>{base}</c> est <paramref name="BaseUrl"/> et
 /// <c>{sha512}</c> l'empreinte du fichier entier.
@@ -25,6 +30,7 @@ public sealed record GlpiDeployFileSource(
     string? FilesUserName = null,
     string? FilesPassword = null,
     string? BaseUrl = null,
+    IReadOnlyList<string>? MirrorUrls = null,
     string? ManifestUrlTemplate = null,
     string? PartUrlTemplate = null)
 {
@@ -39,9 +45,36 @@ public sealed record GlpiDeployFileSource(
     /// <inheritdoc cref="DefaultManifestUrlTemplate"/>
     public const string DefaultPartUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/repository/{sha512}";
 
+    /// <summary>Gabarits d'un miroir, qui est déjà la racine d'un dépôt : pas de chemin de plugin à
+    /// y ajouter, seulement l'empreinte.</summary>
+    public const string MirrorManifestUrlTemplate = "{base}/manifests/{sha512}";
+
+    /// <inheritdoc cref="MirrorManifestUrlTemplate"/>
+    public const string MirrorPartUrlTemplate = "{base}/{sha512}";
+
     public bool HasFilesPath => !string.IsNullOrWhiteSpace(FilesPath);
     public bool HasBaseUrl => !string.IsNullOrWhiteSpace(BaseUrl);
-    public bool Any => HasFilesPath || HasBaseUrl;
+    public bool HasHttp => HasBaseUrl || Candidates.Count > 0;
+    public bool Any => HasFilesPath || HasHttp;
+
+    /// <summary>
+    /// Adresses à essayer, dans l'ordre : les miroirs de l'installation d'abord — ce sont ceux que
+    /// ses agents utilisent — puis la racine HTTP avec le chemin de dépôt du plugin.
+    /// </summary>
+    public IReadOnlyList<(string Root, string ManifestTemplate, string PartTemplate)> Candidates =>
+    [
+        .. (MirrorUrls ?? [])
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Select(url => (url, MirrorManifestUrlTemplate, MirrorPartUrlTemplate)),
+        .. HasBaseUrl
+            ? new[]
+            {
+                (BaseUrl!,
+                 ManifestUrlTemplate ?? DefaultManifestUrlTemplate,
+                 PartUrlTemplate ?? DefaultPartUrlTemplate),
+            }
+            : [],
+    ];
 }
 
 /// <summary>Ce qu'une tentative de récupération a produit.</summary>
@@ -116,20 +149,20 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
             }
         }
 
-        if (source.HasBaseUrl)
+        foreach ((string root, string manifestTemplate, string partTemplate) in source.Candidates)
         {
             try
             {
-                if (await FetchOverHttpAsync(sha512, source, cancellationToken) is { } fromHttp)
+                if (await FetchOverHttpAsync(sha512, root, manifestTemplate, partTemplate, cancellationToken) is { } fromHttp)
                 {
                     return new GlpiDeployFileFetchResult(fromHttp, null);
                 }
 
-                attempts.Add($"HTTP : rien à {ManifestUrl(sha512, source)}");
+                attempts.Add($"rien à {Format(partTemplate, root, sha512)}");
             }
             catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
             {
-                attempts.Add($"HTTP : {ex.Message}");
+                attempts.Add($"{Format(partTemplate, root, sha512)} : {ex.Message}");
             }
         }
 
@@ -219,10 +252,11 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 
     // ---- Route HTTP --------------------------------------------------------
 
-    private async Task<string?> FetchOverHttpAsync(string sha512, GlpiDeployFileSource source, CancellationToken cancellationToken)
+    private async Task<string?> FetchOverHttpAsync(
+        string sha512, string root, string manifestTemplate, string partTemplate, CancellationToken cancellationToken)
     {
         using HttpResponseMessage manifestResponse = await httpClient.GetAsync(
-            ManifestUrl(sha512, source), cancellationToken);
+            Format(manifestTemplate, root, sha512), cancellationToken);
 
         IReadOnlyList<string> partHashes;
         if (manifestResponse.IsSuccessStatusCode)
@@ -241,7 +275,7 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
             return null;
         }
 
-        List<string> urls = [.. partHashes.Select(part => PartUrl(part, source))];
+        List<string> urls = [.. partHashes.Select(part => Format(partTemplate, root, part))];
 
         // Une première requête sert de sonde : inutile d'écrire un fichier temporaire pour
         // découvrir au premier fragment que le gabarit d'URL ne mène nulle part.
@@ -263,12 +297,6 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
             })),
             cancellationToken);
     }
-
-    private static string ManifestUrl(string sha512, GlpiDeployFileSource source) => Format(
-        source.ManifestUrlTemplate ?? GlpiDeployFileSource.DefaultManifestUrlTemplate, source.BaseUrl!, sha512);
-
-    private static string PartUrl(string sha512, GlpiDeployFileSource source) => Format(
-        source.PartUrlTemplate ?? GlpiDeployFileSource.DefaultPartUrlTemplate, source.BaseUrl!, sha512);
 
     private static string Format(string template, string baseUrl, string sha512) => template
         .Replace("{base}", baseUrl.TrimEnd('/'), StringComparison.Ordinal)
