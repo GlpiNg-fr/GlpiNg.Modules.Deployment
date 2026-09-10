@@ -1,3 +1,4 @@
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GlpiNg.Modules.Deployment.Models;
@@ -52,19 +53,10 @@ public static class GlpiDeployPackageJsonMapper
             return content;
         }
 
-        JsonObject? root;
-        try
+        if (TryParseObject(json) is not { } root)
         {
-            root = JsonNode.Parse(json) as JsonObject;
-        }
-        catch (JsonException)
-        {
-            content.Unsupported.Add("document JSON illisible");
-            return content;
-        }
-
-        if (root is null)
-        {
+            content.Unsupported.Add(
+                $"document JSON illisible : {json[..Math.Min(120, json.Length)]}…");
             return content;
         }
 
@@ -77,6 +69,99 @@ public static class GlpiDeployPackageJsonMapper
 
         return content;
     }
+
+    /// <summary>
+    /// Lit le document, tel quel puis « désassaini ».
+    ///
+    /// GLPI n'écrit pas ses champs texte bruts en base : <c>Toolbox\Sanitizer</c> y échappe les
+    /// caractères réservés de SQL (<c>"</c> devient <c>\"</c>) et encode <c>&amp;</c>, <c>&lt;</c>
+    /// et <c>&gt;</c> en entités. Un document de paquet lu directement dans la colonne n'est donc
+    /// pas du JSON valide : ses guillemets de structure sont échappés. C'est ce qui faisait
+    /// échouer la lecture, et donc n'associait aucun fichier ni aucune action aux paquets importés.
+    ///
+    /// La forme brute est tout de même essayée d'abord : rien ne garantit que toutes les versions
+    /// assainissent, et un document déjà propre ne doit pas être abîmé par une réparation inutile.
+    /// </summary>
+    private static JsonObject? TryParseObject(string json)
+    {
+        foreach (string candidate in (string[])[json, Unsanitize(json)])
+        {
+            try
+            {
+                if (JsonNode.Parse(candidate) is JsonObject parsed)
+                {
+                    return parsed;
+                }
+            }
+            catch (JsonException)
+            {
+                // Forme suivante.
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Défait l'échappement SQL puis les entités, dans cet ordre : les entités peuvent
+    /// contenir un point-virgule, jamais un antislash.</summary>
+    internal static string Unsanitize(string value) => DecodeEntities(StripSlashes(value));
+
+    /// <summary>
+    /// Inverse l'échappement appliqué à l'écriture. Un antislash suivi d'un caractère non reconnu
+    /// est laissé tel quel : c'est alors une séquence d'échappement JSON légitime, qui doit
+    /// survivre à l'opération.
+    /// </summary>
+    private static string StripSlashes(string value)
+    {
+        StringBuilder builder = new(value.Length);
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (value[i] != '\\' || i + 1 >= value.Length)
+            {
+                builder.Append(value[i]);
+                continue;
+            }
+
+            char next = value[i + 1];
+            char? unescaped = next switch
+            {
+                '\'' => '\'',
+                '"' => '"',
+                '\\' => '\\',
+                'n' => '\n',
+                'r' => '\r',
+                '0' => '\0',
+                'Z' => '\u001a',
+                _ => null,
+            };
+
+            if (unescaped is { } character)
+            {
+                builder.Append(character);
+                i++;
+            }
+            else
+            {
+                builder.Append(value[i]);
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Défait les entités que GLPI substitue à <c>&amp;</c>, <c>&lt;</c> et <c>&gt;</c> — les seules
+    /// qu'il encode, dans sa forme courante comme dans l'ancienne. Aucune ne produit un caractère
+    /// de structure JSON, l'opération est donc sans risque pour le document.
+    /// </summary>
+    private static string DecodeEntities(string value) => value
+        .Replace("&#60;", "<", StringComparison.Ordinal)
+        .Replace("&#62;", ">", StringComparison.Ordinal)
+        .Replace("&lt;", "<", StringComparison.Ordinal)
+        .Replace("&gt;", ">", StringComparison.Ordinal)
+        .Replace("&#38;", "&", StringComparison.Ordinal)
+        .Replace("&amp;", "&", StringComparison.Ordinal);
 
     private static void ReadChecks(JsonArray? checks, GlpiDeployPackageContent content)
     {
