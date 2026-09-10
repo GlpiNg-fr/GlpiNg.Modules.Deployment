@@ -1,5 +1,7 @@
-﻿using System.IO.Compression;
+﻿using System.Globalization;
+using System.IO.Compression;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 
 namespace GlpiNg.Modules.Deployment.Import;
 
@@ -14,70 +16,45 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// partage déjà accessible.
 /// </param>
 /// <param name="FilesPassword">Mot de passe associé à <paramref name="FilesUserName"/>.</param>
-/// <param name="BaseUrl">Racine HTTP de GLPI, utilisée en repli quand le disque n'est pas joignable.</param>
+/// <param name="BaseUrl">Racine HTTP de GLPI, pour la route authentifiée décrite ci-dessous.</param>
+/// <param name="GlpiUserName">
+/// Compte GLPI utilisé pour ouvrir une session web. Le seul point d'accès qui rend un fichier
+/// entier (<c>front/deployfile_download.php</c>) vérifie le droit
+/// <c>plugin_glpiinventory_package</c> : sans session, il n'y a rien à télécharger.
+/// </param>
+/// <param name="GlpiPassword">Mot de passe associé à <paramref name="GlpiUserName"/>.</param>
 /// <param name="MirrorUrls">
-/// Serveurs de miroir déclarés par le plugin sur la base source. Essayés avant
-/// <paramref name="BaseUrl"/> : ce sont les adresses depuis lesquelles les agents de cette
-/// installation téléchargent déjà, donc celles dont on sait qu'elles fonctionnent.
+/// Serveurs de miroir déclarés par le plugin. Un miroir est une copie statique du répertoire
+/// <c>files/</c> servie par un serveur web ordinaire : ses manifestes et ses fragments s'y lisent
+/// aux mêmes emplacements que sur le disque d'origine.
 /// </param>
-/// <param name="ManifestUrlTemplate">
-/// Gabarit d'URL du manifeste d'un fichier. Marqueurs : <c>{base}</c> pour
-/// <paramref name="BaseUrl"/>, <c>{sha512}</c> pour l'empreinte, et <c>{shard}</c> pour le
-/// découpage en sous-dossiers dont GLPI se sert pour ne pas entasser des milliers de fichiers dans
-/// un seul répertoire — le premier caractère de l'empreinte, puis les deux premiers
-/// (<c>000dfe…</c> donne <c>0/00</c>).
-/// </param>
-/// <param name="PartUrlTemplate">Gabarit d'URL d'un fragment, mêmes marqueurs.</param>
 public sealed record GlpiDeployFileSource(
     string? FilesPath = null,
     string? FilesUserName = null,
     string? FilesPassword = null,
     string? BaseUrl = null,
-    IReadOnlyList<string>? MirrorUrls = null,
-    string? ManifestUrlTemplate = null,
-    string? PartUrlTemplate = null)
+    string? GlpiUserName = null,
+    string? GlpiPassword = null,
+    IReadOnlyList<string>? MirrorUrls = null)
 {
-    /// <summary>
-    /// Tracés par défaut, calqués sur le dépôt du plugin GLPI Inventory. Réglables plutôt que figés
-    /// : ils ont changé entre FusionInventory et GLPI Inventory, et rien ici ne permet de vérifier
-    /// lequel sert en face. Quand une récupération échoue, l'URL réellement demandée est rapportée
-    /// telle quelle — c'est ce qui permet de corriger le gabarit sans toucher au code.
-    /// </summary>
-    public const string DefaultManifestUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/manifests/{sha512}";
-
-    /// <inheritdoc cref="DefaultManifestUrlTemplate"/>
-    public const string DefaultPartUrlTemplate = "{base}/plugins/glpiinventory/b/deploy/repository/{shard}/{sha512}";
-
-    /// <summary>Gabarits d'un miroir, qui est déjà la racine d'un dépôt : pas de chemin de plugin à
-    /// y ajouter, seulement l'empreinte.</summary>
+    /// <summary>Manifeste d'un fichier sur un miroir : à plat, comme sur le disque de GLPI.</summary>
     public const string MirrorManifestUrlTemplate = "{base}/manifests/{sha512}";
 
-    /// <inheritdoc cref="MirrorManifestUrlTemplate"/>
-    public const string MirrorPartUrlTemplate = "{base}/{shard}/{sha512}";
+    /// <summary>Fragment sur un miroir : sous son découpage d'empreinte, comme sur le disque.</summary>
+    public const string MirrorPartUrlTemplate = "{base}/repository/{shard}/{sha512}";
+
+    /// <summary>Point d'accès qui rend un fichier entier, déjà décompressé, en une requête.</summary>
+    public const string DownloadUrlTemplate = "{base}/front/deployfile_download.php?deployfile_id={id}";
 
     public bool HasFilesPath => !string.IsNullOrWhiteSpace(FilesPath);
-    public bool HasBaseUrl => !string.IsNullOrWhiteSpace(BaseUrl);
-    public bool HasHttp => HasBaseUrl || Candidates.Count > 0;
-    public bool Any => HasFilesPath || HasHttp;
 
-    /// <summary>
-    /// Adresses à essayer, dans l'ordre : les miroirs de l'installation d'abord — ce sont ceux que
-    /// ses agents utilisent — puis la racine HTTP avec le chemin de dépôt du plugin.
-    /// </summary>
-    public IReadOnlyList<(string Root, string ManifestTemplate, string PartTemplate)> Candidates =>
-    [
-        .. (MirrorUrls ?? [])
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Select(url => (url, MirrorManifestUrlTemplate, MirrorPartUrlTemplate)),
-        .. HasBaseUrl
-            ? new[]
-            {
-                (BaseUrl!,
-                 ManifestUrlTemplate ?? DefaultManifestUrlTemplate,
-                 PartUrlTemplate ?? DefaultPartUrlTemplate),
-            }
-            : [],
-    ];
+    /// <summary>Vrai quand la route authentifiée est utilisable : racine et compte renseignés.</summary>
+    public bool HasGlpiSession => !string.IsNullOrWhiteSpace(BaseUrl) && !string.IsNullOrWhiteSpace(GlpiUserName);
+
+    public IReadOnlyList<string> Mirrors =>
+        [.. (MirrorUrls ?? []).Where(url => !string.IsNullOrWhiteSpace(url))];
+
+    public bool Any => HasFilesPath || HasGlpiSession || Mirrors.Count > 0;
 }
 
 /// <summary>Ce qu'une tentative de récupération a produit.</summary>
@@ -92,21 +69,39 @@ public sealed record GlpiDeployFileFetchResult(string? TempFilePath, string? Fai
 /// Récupère le contenu d'un fichier de paquet depuis une installation GLPI, pour que l'import
 /// n'ait pas à s'arrêter au descripteur.
 ///
-/// GLPI range ces fichiers déjà découpés en fragments et compressés, avec un manifeste par fichier
-/// qui liste les empreintes de ses fragments. La reconstitution consiste donc à lire le manifeste,
-/// récupérer chaque fragment, le décompresser et concaténer.
+/// Ce que le plugin fait de ses fichiers, d'après son code (<c>inc/deployfile.class.php</c>,
+/// <c>inc/deployfilepart.class.php</c>, <c>public/b/deploy/index.php</c>) :
 ///
-/// Rien n'est supposé de la disposition des répertoires : les fragments sont retrouvés par leur nom
-/// au moyen d'un index bâti une fois pour toutes sur l'arborescence, quel que soit son découpage en
-/// sous-dossiers. De même, la compression est détectée sur le contenu — les deux octets d'en-tête
-/// gzip — plutôt que déduite d'une extension. C'est ce qui rend cette route utilisable sans avoir
-/// pu la confronter à une installation réelle.
+/// <list type="bullet">
+/// <item>un fichier est découpé en fragments, chacun compressé en gzip et rangé dans
+/// <c>files/repository/{premier caractère}/{deux premiers}/{empreinte du fragment}</c> ;</item>
+/// <item>la liste de ses fragments vit dans un manifeste, <c>files/manifests/{empreinte du
+/// fichier}</c>, à plat, une empreinte par ligne ;</item>
+/// <item>cette liste n'est <b>nulle part en base</b> : la table <c>deployfiles</c> ne porte que le
+/// nom, la taille, le type et l'empreinte.</item>
+/// </list>
+///
+/// D'où les trois routes, et leurs limites respectives :
+///
+/// <list type="number">
+/// <item><b>Disque</b> — manifeste puis fragments, lus aux emplacements ci-dessus. La seule qui
+/// fonctionne sans rien d'autre.</item>
+/// <item><b>Miroir</b> — un miroir est une copie statique de <c>files/</c> servie par un serveur
+/// web ordinaire : mêmes chemins, en HTTP.</item>
+/// <item><b>Session GLPI</b> — <c>front/deployfile_download.php?deployfile_id=</c> rend le fichier
+/// entier déjà réassemblé et décompressé, mais vérifie le droit
+/// <c>plugin_glpiinventory_package</c> : il faut donc ouvrir une session web.</item>
+/// </list>
+///
+/// Le point d'accès des agents (<c>b/deploy/?action=getFilePart</c>) n'en est pas une : il ne sert
+/// qu'un fragment à la fois, et l'agent n'apprend la liste des fragments que dans le JSON de son
+/// job, construit à partir du manifeste. Sans manifeste, il n'y a rien à demander.
 ///
 /// Le garde-fou tient dans l'empreinte : l'appelant réécrit le fichier reconstitué par le stockage
-/// GlpiNg, qui en recalcule le SHA-512. S'il ne correspond pas à celui attendu, c'est qu'une
-/// hypothèse était fausse — et rien n'est enregistré.
+/// GlpiNg, qui en recalcule le SHA-512. S'il ne correspond pas à celui attendu, rien n'est
+/// enregistré.
 /// </summary>
-public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
+public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 {
     private Dictionary<string, string>? _repositoryIndex;
     private string? _indexedRoot;
@@ -116,8 +111,13 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
     // pour rien.
     private NetworkShareConnection? _share;
 
+    /// <summary>Résultat de la connexion à GLPI : tentée une fois, réussie ou non.</summary>
+    private bool? _glpiSessionOpened;
+
+    // « deployFileId » : identifiant du fichier dans deployfiles, sans lequel la route authentifiée
+    // n'a rien à demander — c'est le seul paramètre que deployfile_download.php accepte.
     public async Task<GlpiDeployFileFetchResult> FetchAsync(
-        string sha512, GlpiDeployFileSource source, CancellationToken cancellationToken = default)
+        string sha512, GlpiDeployFileSource source, int? deployFileId = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sha512);
         ArgumentNullException.ThrowIfNull(source);
@@ -152,20 +152,44 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
             }
         }
 
-        foreach ((string root, string manifestTemplate, string partTemplate) in source.Candidates)
+        foreach (string mirror in source.Mirrors)
         {
             try
             {
-                if (await FetchOverHttpAsync(sha512, root, manifestTemplate, partTemplate, cancellationToken) is { } fromHttp)
+                if (await FetchFromMirrorAsync(sha512, mirror, cancellationToken) is { } fromMirror)
                 {
-                    return new GlpiDeployFileFetchResult(fromHttp, null);
+                    return new GlpiDeployFileFetchResult(fromMirror, null);
                 }
 
-                attempts.Add($"rien à {Format(partTemplate, root, sha512)}");
+                attempts.Add($"rien sur le miroir {mirror}");
             }
             catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
             {
-                attempts.Add($"{Format(partTemplate, root, sha512)} : {ex.Message}");
+                attempts.Add($"miroir {mirror} : {ex.Message}");
+            }
+        }
+
+        if (source.HasGlpiSession)
+        {
+            if (deployFileId is not { } fileId)
+            {
+                attempts.Add("session GLPI : identifiant du fichier inconnu dans la table deployfiles");
+            }
+            else
+            {
+                try
+                {
+                    if (await FetchOverGlpiSessionAsync(fileId, source, cancellationToken) is { } fromGlpi)
+                    {
+                        return new GlpiDeployFileFetchResult(fromGlpi, null);
+                    }
+
+                    attempts.Add($"rien à {DownloadUrl(fileId, source)} (session ouverte ?)");
+                }
+                catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
+                {
+                    attempts.Add($"session GLPI : {ex.Message}");
+                }
             }
         }
 
@@ -290,35 +314,34 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
 
     private static string ManifestKey(string sha512) => "manifest:" + sha512;
 
-    // ---- Route HTTP --------------------------------------------------------
+    // ---- Route miroir ------------------------------------------------------
 
-    private async Task<string?> FetchOverHttpAsync(
-        string sha512, string root, string manifestTemplate, string partTemplate, CancellationToken cancellationToken)
+    /// <summary>
+    /// Reconstitue un fichier depuis un miroir, qui est une copie statique du répertoire
+    /// <c>files/</c> : mêmes chemins que sur le disque de GLPI, servis en HTTP.
+    /// </summary>
+    private async Task<string?> FetchFromMirrorAsync(string sha512, string mirror, CancellationToken cancellationToken)
     {
         using HttpResponseMessage manifestResponse = await httpClient.GetAsync(
-            Format(manifestTemplate, root, sha512), cancellationToken);
+            Format(GlpiDeployFileSource.MirrorManifestUrlTemplate, mirror, sha512), cancellationToken);
 
-        IReadOnlyList<string> partHashes;
-        if (manifestResponse.IsSuccessStatusCode)
+        if (!manifestResponse.IsSuccessStatusCode)
         {
-            string manifest = await manifestResponse.Content.ReadAsStringAsync(cancellationToken);
-            partHashes = ParseManifest(manifest.Split('\n'));
+            return null;
         }
-        else
-        {
-            // Pas de manifeste : le fichier est peut-être servi entier sous sa propre empreinte.
-            partHashes = [sha512];
-        }
+
+        string manifest = await manifestResponse.Content.ReadAsStringAsync(cancellationToken);
+        List<string> partHashes = ParseManifest(manifest.Split('\n'));
 
         if (partHashes.Count == 0)
         {
             return null;
         }
 
-        List<string> urls = [.. partHashes.Select(part => Format(partTemplate, root, part))];
+        List<string> urls = [.. partHashes.Select(part => Format(GlpiDeployFileSource.MirrorPartUrlTemplate, mirror, part))];
 
-        // Une première requête sert de sonde : inutile d'écrire un fichier temporaire pour
-        // découvrir au premier fragment que le gabarit d'URL ne mène nulle part.
+        // Le premier fragment sert de sonde : inutile d'ouvrir un fichier temporaire pour découvrir
+        // que le miroir ne sert pas le dépôt à cet endroit.
         using (HttpResponseMessage probe = await httpClient.GetAsync(
             urls[0], HttpCompletionOption.ResponseHeadersRead, cancellationToken))
         {
@@ -328,15 +351,96 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
             }
         }
 
-        return await AssembleAsync(
-            urls.Select(url => (Func<CancellationToken, Task<Stream>>)(async ct =>
-            {
-                HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStreamAsync(ct);
-            })),
-            cancellationToken);
+        return await AssembleAsync(urls.Select(url => Opener(url)), cancellationToken);
     }
+
+    // ---- Route session GLPI ------------------------------------------------
+
+    /// <summary>
+    /// Télécharge le fichier entier via <c>front/deployfile_download.php</c>, qui le réassemble et
+    /// le décompresse côté GLPI. Une requête par fichier, et rien à savoir du découpage.
+    ///
+    /// Ce point d'accès vérifie un droit : il faut donc y arriver avec une session web ouverte,
+    /// d'où la connexion préalable au formulaire de GLPI.
+    /// </summary>
+    private async Task<string?> FetchOverGlpiSessionAsync(int deployFileId, GlpiDeployFileSource source, CancellationToken cancellationToken)
+    {
+        if (!await EnsureGlpiSessionAsync(source, cancellationToken))
+        {
+            return null;
+        }
+
+        using HttpResponseMessage response = await httpClient.GetAsync(
+            DownloadUrl(deployFileId, source), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        // Une session refusée ne rend pas une erreur mais la page de connexion : le type de contenu
+        // est le seul indice avant d'avoir tout téléchargé.
+        if (!response.IsSuccessStatusCode
+            || response.Content.Headers.ContentType?.MediaType is "text/html")
+        {
+            return null;
+        }
+
+        return await AssembleAsync(
+            [ct => response.Content.ReadAsStreamAsync(ct)], cancellationToken);
+    }
+
+    /// <summary>
+    /// Ouvre une session web sur GLPI, une seule fois par exécution.
+    ///
+    /// Le formulaire de connexion porte un jeton anti-rejeu qu'il faut lui reprendre : on lit la
+    /// page, on en extrait le jeton, et on renvoie le tout. Le client HTTP conserve le cookie de
+    /// session pour les téléchargements suivants.
+    /// </summary>
+    private async Task<bool> EnsureGlpiSessionAsync(GlpiDeployFileSource source, CancellationToken cancellationToken)
+    {
+        if (_glpiSessionOpened is { } opened)
+        {
+            return opened;
+        }
+
+        string loginUrl = $"{source.BaseUrl!.TrimEnd('/')}/front/login.php";
+
+        string loginPage = await httpClient.GetStringAsync(loginUrl, cancellationToken);
+        Match token = CsrfTokenRegex().Match(loginPage);
+
+        Dictionary<string, string> form = new()
+        {
+            ["login_name"] = source.GlpiUserName!,
+            ["login_password"] = source.GlpiPassword ?? string.Empty,
+        };
+
+        if (token.Success)
+        {
+            form["_glpi_csrf_token"] = token.Groups["token"].Value;
+        }
+
+        using HttpResponseMessage response = await httpClient.PostAsync(
+            loginUrl, new FormUrlEncodedContent(form), cancellationToken);
+
+        // GLPI renvoie la page de connexion quand elle échoue, et redirige vers l'accueil sinon.
+        string body = await response.Content.ReadAsStringAsync(cancellationToken);
+        _glpiSessionOpened = response.IsSuccessStatusCode && !body.Contains("login_password", StringComparison.Ordinal);
+
+        return _glpiSessionOpened.Value;
+    }
+
+    private static string DownloadUrl(int deployFileId, GlpiDeployFileSource source) =>
+        GlpiDeployFileSource.DownloadUrlTemplate
+            .Replace("{base}", source.BaseUrl!.TrimEnd('/'), StringComparison.Ordinal)
+            .Replace("{id}", deployFileId.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+
+    private Func<CancellationToken, Task<Stream>> Opener(string url) => async ct =>
+    {
+        HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync(ct);
+    };
+
+    [GeneratedRegex("""name=["']_glpi_csrf_token["'][^>]*?value=["'](?<token>[^"']+)["']""", RegexOptions.IgnoreCase)]
+    private static partial Regex CsrfTokenRegex();
+
+    // ---- Commun ------------------------------------------------------------
 
     private static string Format(string template, string baseUrl, string sha512) => template
         .Replace("{base}", baseUrl.TrimEnd('/'), StringComparison.Ordinal)
@@ -347,13 +451,12 @@ public sealed class GlpiDeployFileFetcher(HttpClient httpClient) : IDisposable
     /// Découpage en sous-dossiers d'une empreinte, tel que GLPI range son dépôt : premier
     /// caractère, puis les deux premiers. <c>000dfeead…</c> vit sous <c>0/00/</c>.
     ///
-    /// C'est ce qui évite d'entasser des milliers de fichiers dans un seul répertoire ; le
-    /// connaître permet d'aller droit au fichier plutôt que de parcourir l'arborescence.
+    /// Reprend <c>PluginGlpiinventoryDeployFile::getDirBySha512()</c> du plugin, où c'est ce qui
+    /// évite d'entasser des milliers de fichiers dans un seul répertoire.
     /// </summary>
     public static string Shard(string sha512) =>
         sha512.Length >= 2 ? $"{sha512[0]}/{sha512[..2]}" : sha512;
 
-    // ---- Commun ------------------------------------------------------------
 
     /// <summary>Empreintes hexadécimales du manifeste, une par ligne, commentaires et vides ignorés.</summary>
     private static List<string> ParseManifest(IEnumerable<string> lines) =>
