@@ -111,8 +111,9 @@ public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisp
     // pour rien.
     private NetworkShareConnection? _share;
 
-    /// <summary>Résultat de la connexion à GLPI : tentée une fois, réussie ou non.</summary>
-    private bool? _glpiSessionOpened;
+    /// <summary>Résultat de la connexion à GLPI : tentée une fois. Chaîne vide en cas de succès,
+    /// motif de l'échec sinon, <c>null</c> tant qu'elle n'a pas été tentée.</summary>
+    private string? _glpiSessionFailure;
 
     // « deployFileId » : identifiant du fichier dans deployfiles, sans lequel la route authentifiée
     // n'a rien à demander — c'est le seul paramètre que deployfile_download.php accepte.
@@ -185,6 +186,10 @@ public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisp
                     }
 
                     attempts.Add($"rien à {DownloadUrl(fileId, source)} (session ouverte ?)");
+                }
+                catch (GlpiSessionException ex)
+                {
+                    attempts.Add($"session GLPI : {ex.Message}");
                 }
                 catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
                 {
@@ -365,9 +370,9 @@ public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisp
     /// </summary>
     private async Task<string?> FetchOverGlpiSessionAsync(int deployFileId, GlpiDeployFileSource source, CancellationToken cancellationToken)
     {
-        if (!await EnsureGlpiSessionAsync(source, cancellationToken))
+        if (await EnsureGlpiSessionAsync(source, cancellationToken) is { } loginFailure)
         {
-            return null;
+            throw new GlpiSessionException(loginFailure);
         }
 
         using HttpResponseMessage response = await httpClient.GetAsync(
@@ -385,44 +390,90 @@ public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisp
             [ct => response.Content.ReadAsStreamAsync(ct)], cancellationToken);
     }
 
+    /// <summary>Échec d'ouverture de session, porteur de sa cause exacte.</summary>
+    private sealed class GlpiSessionException(string message) : Exception(message);
+
     /// <summary>
     /// Ouvre une session web sur GLPI, une seule fois par exécution.
     ///
-    /// Le formulaire de connexion porte un jeton anti-rejeu qu'il faut lui reprendre : on lit la
-    /// page, on en extrait le jeton, et on renvoie le tout. Le client HTTP conserve le cookie de
-    /// session pour les téléchargements suivants.
+    /// Le formulaire porte un jeton anti-rejeu (<c>_glpi_csrf_token</c>) qu'il faut lui reprendre :
+    /// une soumission sans ce jeton est rejetée en 400, ce qui est le premier symptôme d'une
+    /// extraction ratée. Le jeton est donc cherché dans les deux ordres d'attributs — GLPI rend
+    /// tantôt <c>name</c> avant <c>value</c>, tantôt l'inverse selon la version — et son absence
+    /// est signalée pour elle-même plut&#244;t que laissée devenir un 400 inexplicable.
+    ///
+    /// La requête se présente comme le ferait le formulaire : m&#234;me <c>Referer</c>, m&#234;me type de
+    /// contenu. GLPI v&#233;rifie l'un et l'autre selon sa configuration.
     /// </summary>
-    private async Task<bool> EnsureGlpiSessionAsync(GlpiDeployFileSource source, CancellationToken cancellationToken)
+    /// <returns><c>null</c> si la session est ouverte, sinon la raison de l'échec.</returns>
+    private async Task<string?> EnsureGlpiSessionAsync(GlpiDeployFileSource source, CancellationToken cancellationToken)
     {
-        if (_glpiSessionOpened is { } opened)
+        if (_glpiSessionFailure is { } known)
         {
-            return opened;
+            return known.Length == 0 ? null : known;
         }
 
+        string failure = await OpenGlpiSessionAsync(source, cancellationToken) ?? string.Empty;
+        _glpiSessionFailure = failure;
+
+        return failure.Length == 0 ? null : failure;
+    }
+
+    private async Task<string?> OpenGlpiSessionAsync(GlpiDeployFileSource source, CancellationToken cancellationToken)
+    {
         string loginUrl = $"{source.BaseUrl!.TrimEnd('/')}/front/login.php";
 
-        string loginPage = await httpClient.GetStringAsync(loginUrl, cancellationToken);
-        Match token = CsrfTokenRegex().Match(loginPage);
+        using HttpResponseMessage page = await httpClient.GetAsync(loginUrl, cancellationToken);
+        if (!page.IsSuccessStatusCode)
+        {
+            return $"{loginUrl} a répondu {(int)page.StatusCode} {page.ReasonPhrase}";
+        }
 
-        Dictionary<string, string> form = new()
+        string html = await page.Content.ReadAsStringAsync(cancellationToken);
+
+        if (FindCsrfToken(html) is not { } token)
+        {
+            return $"jeton anti-rejeu introuvable sur {loginUrl} — page de connexion inattendue "
+                + "(GLPI derrière un portail d'authentification, ou version non reconnue)";
+        }
+
+        FormUrlEncodedContent form = new(new Dictionary<string, string>
         {
             ["login_name"] = source.GlpiUserName!,
             ["login_password"] = source.GlpiPassword ?? string.Empty,
-        };
+            ["_glpi_csrf_token"] = token,
+            ["submit"] = "Valider",
+        });
 
-        if (token.Success)
+        using HttpRequestMessage request = new(HttpMethod.Post, loginUrl) { Content = form };
+        request.Headers.Referrer = new Uri(loginUrl);
+
+        using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
         {
-            form["_glpi_csrf_token"] = token.Groups["token"].Value;
+            return $"connexion refusée : {(int)response.StatusCode} {response.ReasonPhrase}";
         }
 
-        using HttpResponseMessage response = await httpClient.PostAsync(
-            loginUrl, new FormUrlEncodedContent(form), cancellationToken);
-
-        // GLPI renvoie la page de connexion quand elle échoue, et redirige vers l'accueil sinon.
+        // GLPI rend de nouveau le formulaire quand l'authentification échoue, et l'accueil sinon :
+        // la présence du champ de mot de passe est le signe le plus stable d'un échec.
         string body = await response.Content.ReadAsStringAsync(cancellationToken);
-        _glpiSessionOpened = response.IsSuccessStatusCode && !body.Contains("login_password", StringComparison.Ordinal);
+        return body.Contains("login_password", StringComparison.Ordinal)
+            ? "identifiant ou mot de passe refusé par GLPI"
+            : null;
+    }
 
-        return _glpiSessionOpened.Value;
+    /// <summary>Jeton anti-rejeu du formulaire, quel que soit l'ordre de ses attributs.</summary>
+    private static string? FindCsrfToken(string html)
+    {
+        if (CsrfTokenRegex().Match(html) is { Success: true } nameFirst)
+        {
+            return nameFirst.Groups["token"].Value;
+        }
+
+        return CsrfTokenReversedRegex().Match(html) is { Success: true } valueFirst
+            ? valueFirst.Groups["token"].Value
+            : null;
     }
 
     private static string DownloadUrl(int deployFileId, GlpiDeployFileSource source) =>
@@ -439,6 +490,9 @@ public sealed partial class GlpiDeployFileFetcher(HttpClient httpClient) : IDisp
 
     [GeneratedRegex("""name=["']_glpi_csrf_token["'][^>]*?value=["'](?<token>[^"']+)["']""", RegexOptions.IgnoreCase)]
     private static partial Regex CsrfTokenRegex();
+
+    [GeneratedRegex("""value=["'](?<token>[^"']+)["'][^>]*?name=["']_glpi_csrf_token["']""", RegexOptions.IgnoreCase)]
+    private static partial Regex CsrfTokenReversedRegex();
 
     // ---- Commun ------------------------------------------------------------
 
