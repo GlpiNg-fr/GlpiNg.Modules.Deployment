@@ -1,9 +1,9 @@
-@page "/tools/deployments/tasks/{TaskId:int}"
+﻿@page "/tools/deployments/tasks/{TaskId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_task?.Name ?? "Tâche")</PageTitle>
+<PageTitle>@(_task?.Name ?? "Tâche") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="tasks" />
 

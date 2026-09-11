@@ -1,9 +1,9 @@
-@page "/tools/deployments/computer-groups/{GroupId:int}"
+﻿@page "/tools/deployments/computer-groups/{GroupId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_group?.Name ?? "Groupe d'ordinateurs")</PageTitle>
+<PageTitle>@(_group?.Name ?? "Groupe d'ordinateurs") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="computergroups" />
 

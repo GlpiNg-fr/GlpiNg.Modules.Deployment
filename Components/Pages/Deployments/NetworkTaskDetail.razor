@@ -1,9 +1,9 @@
-@page "/tools/deployments/networktasks/{TaskId:int}"
+﻿@page "/tools/deployments/networktasks/{TaskId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_task?.Name ?? "Tâche réseau")</PageTitle>
+<PageTitle>@(_task?.Name ?? "Tâche réseau") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="networktasks" />
 

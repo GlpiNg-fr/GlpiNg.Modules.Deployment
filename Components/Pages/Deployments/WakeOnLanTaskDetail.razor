@@ -1,9 +1,9 @@
-@page "/tools/deployments/wakeonlan/{TaskId:int}"
+﻿@page "/tools/deployments/wakeonlan/{TaskId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_task?.Name ?? "Tâche de réveil réseau")</PageTitle>
+<PageTitle>@(_task?.Name ?? "Tâche de réveil réseau") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="wakeonlantasks" />
 

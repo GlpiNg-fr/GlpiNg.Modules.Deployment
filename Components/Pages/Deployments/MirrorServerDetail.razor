@@ -1,8 +1,8 @@
-@page "/tools/deployments/mirrors/{MirrorServerId:int}"
+﻿@page "/tools/deployments/mirrors/{MirrorServerId:int}"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_mirrorServer?.Name ?? "Serveur miroir")</PageTitle>
+<PageTitle>@(_mirrorServer?.Name ?? "Serveur miroir") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="mirrors" />
 

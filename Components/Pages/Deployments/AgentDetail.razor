@@ -1,8 +1,8 @@
-@page "/tools/deployments/agent/{AgentId:int}"
+﻿@page "/tools/deployments/agent/{AgentId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_agent is null ? "Agent" : AgentDisplayName(_agent))</PageTitle>
+<PageTitle>@(_agent is null ? "Agent" : AgentDisplayName(_agent)) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="agents" />
 

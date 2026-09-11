@@ -1,8 +1,8 @@
-@page "/tools/deployments/interaction-templates/{TemplateId:int}"
+﻿@page "/tools/deployments/interaction-templates/{TemplateId:int}"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_template?.Name ?? "Gabarit d'interaction")</PageTitle>
+<PageTitle>@(_template?.Name ?? "Gabarit d'interaction") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="interactiontemplates" />
 

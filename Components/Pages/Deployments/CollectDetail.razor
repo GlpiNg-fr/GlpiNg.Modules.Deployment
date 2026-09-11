@@ -1,8 +1,8 @@
-@page "/tools/deployments/collects/{CollectId:int}"
+﻿@page "/tools/deployments/collects/{CollectId:int}"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_collect?.Name ?? "Informations de collecte")</PageTitle>
+<PageTitle>@(_collect?.Name ?? "Informations de collecte") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="collects" />
 

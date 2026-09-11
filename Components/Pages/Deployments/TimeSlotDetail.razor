@@ -1,8 +1,8 @@
-@page "/tools/deployments/timeslots/{TimeSlotId:int}"
+﻿@page "/tools/deployments/timeslots/{TimeSlotId:int}"
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_timeSlot?.Name ?? "Créneau horaire")</PageTitle>
+<PageTitle>@(_timeSlot?.Name ?? "Créneau horaire") — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="timeslots" />
 
