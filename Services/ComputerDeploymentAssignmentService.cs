@@ -21,17 +21,54 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// </summary>
 public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbContext> dbFactory) : IComputerDeploymentAssignmentService
 {
-    public async Task<List<DeploymentPackageOption>> GetAvailablePackagesAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Paquets proposables sur la fiche d'un poste : ceux dont le déploiement à la demande est
+    /// activé pour un groupe dont ce poste est membre.
+    ///
+    /// Un paquet sans groupe n'est pas en libre-service — c'est ce que veut dire
+    /// <c>DeployComputerGroupId</c> à null (l'option « ----- » du formulaire GLPI-Inventory
+    /// d'origine) — et un paquet remplacé ne se propose plus.
+    ///
+    /// L'appartenance est celle du groupe : liste explicite pour un groupe statique, critères
+    /// réévalués sur le poste pour un groupe dynamique. Un groupe dynamique décrit une population
+    /// qui change sans qu'on y touche ; s'en remettre à une liste figée le viderait de son sens.
+    /// </summary>
+    public async Task<List<DeploymentPackageOption>> GetAvailablePackagesAsync(int computerId, CancellationToken cancellationToken = default)
     {
         await using DbContext db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-        return await db.Set<DeploymentPackage>()
+        // StatusItem inclus : les critères dynamiques peuvent porter sur le statut, qui est un
+        // intitulé et non une colonne du poste.
+        Computer? computer = await db.Set<Computer>()
             .AsNoTracking()
-            .Where(p => p.SupersededByPackageId == null)
+            .Include(c => c.StatusItem)
+            .FirstOrDefaultAsync(c => c.Id == computerId, cancellationToken);
+
+        if (computer is null)
+        {
+            return [];
+        }
+
+        List<DeploymentPackage> candidates = await db.Set<DeploymentPackage>()
+            .AsNoTracking()
+            .Include(p => p.DeployComputerGroup!).ThenInclude(g => g.Members)
+            .Include(p => p.DeployComputerGroup!).ThenInclude(g => g.Criteria)
+            .Where(p => p.SupersededByPackageId == null && p.DeployComputerGroupId != null)
             .OrderBy(p => p.Name)
-            .Select(p => new DeploymentPackageOption { Id = p.Id, Name = p.Name })
             .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. candidates
+                .Where(package => package.DeployComputerGroup is { } group && IsMember(group, computer))
+                .Select(package => new DeploymentPackageOption { Id = package.Id, Name = package.Name })
+        ];
     }
+
+    private static bool IsMember(DeployComputerGroup group, Computer computer) =>
+        group.Type == DeployComputerGroupType.Static
+            ? group.Members.Any(member => member.ComputerId == computer.Id)
+            : DeployGroupCriteriaEvaluator.Matches(computer, group.Criteria);
 
     public async Task<List<ComputerDeploymentAssignment>> GetAssignmentsAsync(int computerId, CancellationToken cancellationToken = default)
     {
@@ -99,6 +136,20 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             {
                 Status = DeploymentAssignmentStatus.PackageNotFound,
                 ErrorMessage = "Au moins un des paquets sélectionnés n'existe plus."
+            };
+        }
+
+        // Le libre-service se vérifie ici aussi, et pas seulement à l'affichage de la liste : un
+        // écran resté ouvert pendant qu'on retire un paquet du libre-service enverrait sinon une
+        // assignation que plus rien n'autorise. La règle appartient au service, pas à la page.
+        HashSet<int> offered = [.. (await GetAvailablePackagesAsync(computerId, cancellationToken)).Select(option => option.Id)];
+
+        if (packageIds.FirstOrDefault(id => !offered.Contains(id)) is var notOffered && notOffered != 0)
+        {
+            return new DeploymentAssignmentResult
+            {
+                Status = DeploymentAssignmentStatus.PackageNotFound,
+                ErrorMessage = "Au moins un des paquets sélectionnés n'est plus proposé en déploiement à la demande pour ce poste.",
             };
         }
 
