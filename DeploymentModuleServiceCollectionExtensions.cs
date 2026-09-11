@@ -60,6 +60,9 @@ public static class DeploymentModuleServiceCollectionExtensions
         // IComputerDeploymentAssignmentService (GlpiNg.Modules.Abstractions), même principe.
         services.AddScoped<IComputerDeploymentAssignmentService, ComputerDeploymentAssignmentService>();
 
+        // Onglet « Informations de collecte » de la fiche Ordinateur, même montage.
+        services.AddScoped<IComputerCollectProvider, ComputerCollectProvider>();
+
         // Alimente la page /self-service (libre-service) : paquets ouverts au libre-service
         // pour lesquels l'utilisateur connecté est éligible, poste(s) sur lesquels il peut les
         // demander, et la demande elle-même — voir SelfServiceDeploymentService, qui délègue à
