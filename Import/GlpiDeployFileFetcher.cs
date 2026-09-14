@@ -2,6 +2,7 @@
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using GlpiNg.Modules.Abstractions.Storage;
 
 namespace GlpiNg.Modules.Deployment.Import;
 
