@@ -1,7 +1,9 @@
 ﻿using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Menu;
+using GlpiNg.Modules.Abstractions.Reports;
 using GlpiNg.Modules.Deployment.Controllers;
 using GlpiNg.Modules.Deployment.Import;
+using GlpiNg.Modules.Deployment.Reports;
 using GlpiNg.Modules.Deployment.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -72,6 +74,11 @@ public static class DeploymentModuleServiceCollectionExtensions
         // Contribution du module au menu latéral de l'hôte (entrée "Déploiements" du
         // groupe "Outils") — voir DeploymentMenuProvider.
         services.AddSingleton<IMenuProvider, DeploymentMenuProvider>();
+
+        // Contribution du module aux rapports de l'hôte (/tools/reports) — voir
+        // DeploymentReportProvider. Scoped, comme celui du module Inventory : un rapport lit la
+        // base sous le cloisonnement par entité de l'utilisateur courant.
+        services.AddScoped<IReportProvider, DeploymentReportProvider>();
 
         // Permet à ASP.NET Core de découvrir les contrôleurs de ce module (assembly
         // distincte de celle du projet hôte).
