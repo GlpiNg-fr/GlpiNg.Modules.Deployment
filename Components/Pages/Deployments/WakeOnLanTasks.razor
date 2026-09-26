@@ -122,7 +122,7 @@
                             <td>
                                 @if (task.LastLaunchedAt is { } lastLaunched)
                                 {
-                                    <div>@lastLaunched.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div>@Display.DateTime(lastLaunched)</div>
                                     <div class="d-flex gap-1">
                                         @if (pending > 0)
                                         {

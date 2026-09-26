@@ -75,8 +75,8 @@
                                     <span class="text-secondary">—</span>
                                 }
                             </td>
-                            <td>@device.FirstSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@device.LastSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@Display.DateTime(device.FirstSeenAt)</td>
+                            <td>@Display.DateTime(device.LastSeenAt)</td>
                             <td><span class="badge @StatusBadgeClass(device.Status)">@StatusLabel(device.Status)</span></td>
                             <td class="text-end">
                                 @if (device.Status == DiscoveredDeviceStatus.New)

@@ -27,7 +27,7 @@ else
         <div class="glpi-fiche-toolbar">
             <span class="text-secondary me-2">
                 <i class="ti ti-history me-1"></i>Dernière exécution :
-                @(_task.LastLaunchedAt is { } last ? last.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "jamais")
+                @(_task.LastLaunchedAt is { } last ? Display.DateTime(last) : "jamais")
             </span>
             <button type="button" class="btn btn-primary" disabled="@(LaunchDisabledReason(_task) is not null || _isLaunching)"
                     title="@(LaunchDisabledReason(_task) ?? "Lancer maintenant")" @onclick="LaunchAsync">
@@ -368,9 +368,9 @@ else
                                             <tr>
                                                 <td>@(job.Agent?.AgentName ?? job.Agent?.DeviceId ?? job.Agent?.Hostname ?? "—")</td>
                                                 <td><span class="badge @StatusBadgeClass(job.Status)">@StatusLabel(job.Status)</span></td>
-                                                <td>@job.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                                                <td>@(job.StartedAt is { } started ? started.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
-                                                <td>@(job.CompletedAt is { } completed ? completed.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                                <td>@Display.DateTime(job.CreatedAt)</td>
+                                                <td>@(job.StartedAt is { } started ? Display.DateTime(started) : "—")</td>
+                                                <td>@(job.CompletedAt is { } completed ? Display.DateTime(completed) : "—")</td>
                                                 <td class="text-end">
                                                     @if (!string.IsNullOrWhiteSpace(job.Log))
                                                     {

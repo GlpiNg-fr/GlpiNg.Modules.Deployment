@@ -106,7 +106,7 @@
                             <td>@(package.SupersededByPackage is not null ? "—" : (package.DeployComputerGroup?.Name ?? "—"))</td>
                             <td>@package.Files.Count</td>
                             <td>@ActionCount(package)</td>
-                            <td>@package.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@Display.DateTime(package.CreatedAt)</td>
                         </tr>
                     }
                 }

@@ -124,11 +124,11 @@ else
                                 </div>
                                 <div class="glpi-fiche-field">
                                     <label>Premier contact</label>
-                                    <div class="glpi-fiche-value-box">@_agent.FirstContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="glpi-fiche-value-box">@Display.DateTime(_agent.FirstContactAt)</div>
                                 </div>
                                 <div class="glpi-fiche-field">
                                     <label>Dernier contact</label>
-                                    <div class="glpi-fiche-value-box">@_agent.LastContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="glpi-fiche-value-box">@Display.DateTime(_agent.LastContactAt)</div>
                                 </div>
                             </div>
                         </div>

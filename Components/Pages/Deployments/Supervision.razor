@@ -54,9 +54,9 @@
                             </td>
                             <td>@(job.Agent?.AgentName ?? job.Agent?.DeviceId ?? job.Agent?.Hostname ?? "—")</td>
                             <td><span class="badge @StatusBadgeClass(job.Status)">@StatusLabel(job.Status)</span></td>
-                            <td>@job.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@(job.StartedAt is { } started ? started.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
-                            <td>@(job.CompletedAt is { } completed ? completed.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                            <td>@Display.DateTime(job.CreatedAt)</td>
+                            <td>@(job.StartedAt is { } started ? Display.DateTime(started) : "—")</td>
+                            <td>@(job.CompletedAt is { } completed ? Display.DateTime(completed) : "—")</td>
                             <td class="text-end">
                                 @if (!string.IsNullOrWhiteSpace(job.Log))
                                 {

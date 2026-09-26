@@ -43,6 +43,7 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
         {
             List<DeploymentJob> agentJobs = await db.Set<DeploymentJob>()
                 .AsNoTracking()
+                .Include(j => j.Package)
                 .Where(j => j.AgentId == agentId && j.TaskId != null)
                 .ToListAsync(cancellationToken);
 
@@ -63,6 +64,9 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
                     .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
                     .Select(j => new ComputerDeploymentTaskExecution
                     {
+                        Key = $"deploy-{j.Id}",
+                        PackageName = j.Package?.Name,
+                        Log = j.Log,
                         DateUtc = j.StartedAt ?? j.CreatedAt,
                         StatusLabel = StatusLabel(j.Status),
                         StatusBadgeCssClass = StatusBadgeCssClass(j.Status)
@@ -122,6 +126,8 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
                     .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
                     .Select(j => new ComputerDeploymentTaskExecution
                     {
+                        Key = $"wol-{j.Id}",
+                        Log = j.Log,
                         DateUtc = j.StartedAt ?? j.CreatedAt,
                         StatusLabel = WakeOnLanStatusLabel(j.Status),
                         StatusBadgeCssClass = WakeOnLanStatusBadgeCssClass(j.Status)

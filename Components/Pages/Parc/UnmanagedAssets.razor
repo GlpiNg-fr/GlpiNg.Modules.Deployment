@@ -70,7 +70,7 @@
                             <td>@(device.Hostname ?? device.SysName ?? "—")</td>
                             <td>@FormatMac(device.MacAddress)</td>
                             <td>@(device.GuessedType ?? "—")</td>
-                            <td>@device.LastSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@Display.DateTime(device.LastSeenAt)</td>
                             <td><span class="badge @StatusBadgeClass(device.Status) text-white">@StatusLabel(device.Status)</span></td>
                             <td class="text-end">
                                 @if (device.Status == DiscoveredDeviceStatus.New)

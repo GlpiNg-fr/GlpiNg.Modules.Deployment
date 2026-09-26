@@ -19,8 +19,9 @@ namespace GlpiNg.Modules.Deployment.Services;
 ///   ],
 ///   "associatedFiles": {
 ///     "&lt;sha512&gt;": {
-///       "name": "...", "p2p": "0", "p2p-retention-duration": "0",
-///       "multiparts": [ { "sha512": "&lt;part sha512&gt;", "size": 5242880 }, ... ]
+///       "name": "...", "p2p": "0", "p2p-retention-duration": "0", "uncompress": 0,
+///       "mirrors": [ "http://serveur/inventory/deploy/file/part/" ],
+///       "multiparts": [ "&lt;part sha512&gt;", ... ]
 ///     }
 ///   }
 /// }
@@ -34,17 +35,26 @@ namespace GlpiNg.Modules.Deployment.Services;
 /// comme tableau sous `use strict`) sans qu'aucune erreur ne remonte au log agent ni au serveur —
 /// silencieux des deux côtés, à ne pas confondre avec un job qui n'aurait simplement rien à faire.
 /// Cette erreur de forme a existé un temps dans ce fichier (objet nu plutôt que tableau) avant
-/// d'être corrigée suite à ce constat ; le champ "uuid" (identifiant interne du
-/// <see cref="DeploymentJob"/>) et "multiparts" (calqué sur <see cref="DeploymentPackageFilePart"/>)
-/// restent des adaptations non vérifiées au-delà de ce qui précède.
+/// d'être corrigée suite à ce constat.
+///
+/// Chaque entrée de "associatedFiles" doit porter les six clés que _validateAnswer exige
+/// (mirrors, multiparts, name, p2p-retention-duration, p2p, uncompress) : il en manquait deux,
+/// l'agent répondait « bad JSON: Missing key `mirrors' » (en debug seulement) puis « No Deploy
+/// job found », et le job, déjà passé en cours par getJobs, y restait indéfiniment. Un paquet
+/// sans fichier n'était pas touché, ce qui masquait le défaut. "multiparts" est une liste de
+/// sha512 de fragments, pas d'objets (GLPI::Agent::Task::Deploy::File en fait des chemins), et
+/// chaque fragment est téléchargé depuis <c>{mirror}/{c1}/{c1c2}/{sha512}</c>.
 /// </summary>
 public class DeployJobJsonBuilder
 {
-    public JsonObject Build(DeploymentJob job, DeploymentPackage package, string jobUuid)
+    /// <param name="mirrors">URLs de base d'où l'agent télécharge les fragments — il y ajoute
+    /// lui-même le chemin <c>{c1}/{c1c2}/{sha512}</c>.</param>
+    public JsonObject Build(DeploymentJob job, DeploymentPackage package, string jobUuid, IReadOnlyList<string> mirrors)
     {
         ArgumentNullException.ThrowIfNull(job);
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(jobUuid);
+        ArgumentNullException.ThrowIfNull(mirrors);
 
         JsonArray checks = DeploymentPackageJsonConverter.ParseJsonArray(package.ChecksJson);
         JsonArray actions = DeploymentPackageJsonConverter.ParseJsonArray(package.ActionsJson);
@@ -58,11 +68,7 @@ public class DeployJobJsonBuilder
             JsonArray multiparts = [];
             foreach (DeploymentPackageFilePart part in file.Parts.OrderBy(p => p.PartIndex))
             {
-                multiparts.Add(new JsonObject
-                {
-                    ["sha512"] = part.Sha512,
-                    ["size"] = part.SizeBytes
-                });
+                multiparts.Add(JsonValue.Create(part.Sha512));
             }
 
             associatedFileHashes.Add(JsonValue.Create(file.Sha512));
@@ -71,6 +77,8 @@ public class DeployJobJsonBuilder
                 ["name"] = file.FileName,
                 ["p2p"] = "0",
                 ["p2p-retention-duration"] = "0",
+                ["uncompress"] = 0,
+                ["mirrors"] = new JsonArray([.. mirrors.Select(mirror => JsonValue.Create(mirror))]),
                 ["multiparts"] = multiparts
             };
         }

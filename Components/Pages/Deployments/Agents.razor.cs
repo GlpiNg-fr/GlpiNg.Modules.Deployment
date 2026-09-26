@@ -47,6 +47,6 @@ public partial class Agents : ComponentBase
     private static string AgentDisplayName(GlpiAgent agent) =>
         agent.AgentName ?? agent.DeviceId ?? agent.AgentUuid;
 
-    private static string LastContactLabel(GlpiAgent agent) =>
-        agent.LastContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+    private string LastContactLabel(GlpiAgent agent) =>
+        Display.DateTime(agent.LastContactAt)!;
 }
