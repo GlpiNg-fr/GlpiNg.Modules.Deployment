@@ -12,7 +12,7 @@ namespace GlpiNg.Modules.Deployment.Controllers;
 
 /// <summary>
 /// Upload de fichiers de paquet de déploiement, un fichier par requête (voir
-/// <c>glpiNg.uploadPackageFiles</c> dans glpi-ng.js, appelé depuis
+/// <c>glping.uploadPackageFiles</c> dans glping.js, appelé depuis
 /// <c>Components/Pages/Deployments/Detail.razor</c>).
 ///
 /// Volontairement une requête HTTP multipart classique plutôt qu'un composant Blazor

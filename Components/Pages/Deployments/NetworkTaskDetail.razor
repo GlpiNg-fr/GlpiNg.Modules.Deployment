@@ -16,15 +16,15 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <a class="glpi-fiche-pager-btn" href="/tools/deployments/networktasks" title="Retour à la liste">
+    <div class="glping-fiche-topbar">
+        <a class="glping-fiche-pager-btn" href="/tools/deployments/networktasks" title="Retour à la liste">
             <i class="ti ti-list"></i>
         </a>
-        <div class="glpi-fiche-crumb">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-radar-2"></i>
             <span>Tâche réseau - @_task.Name - ID @_task.Id</span>
         </div>
-        <div class="glpi-fiche-toolbar">
+        <div class="glping-fiche-toolbar">
             <span class="text-secondary me-2">
                 <i class="ti ti-history me-1"></i>Dernière exécution :
                 @(_task.LastLaunchedAt is { } last ? Display.DateTime(last) : "jamais")
@@ -52,57 +52,57 @@ else
         </div>
     }
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-settings"></i>
                 <span>Principal</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "ranges" ? "active" : "")" @onclick='() => SetTab("ranges")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "ranges" ? "active" : "")" @onclick='() => SetTab("ranges")'>
                 <i class="ti ti-list-numbers"></i>
                 <span>Plages IP</span>
-                <span class="glpi-fiche-tab-count">@_task.IpRanges.Count</span>
+                <span class="glping-fiche-tab-count">@_task.IpRanges.Count</span>
             </button>
             @if (_task.Method == NetworkTaskMethod.NetworkInventory)
             {
-                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "credentials" ? "active" : "")" @onclick='() => SetTab("credentials")'>
+                <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "credentials" ? "active" : "")" @onclick='() => SetTab("credentials")'>
                     <i class="ti ti-key"></i>
                     <span>Identifiants SNMP</span>
-                    <span class="glpi-fiche-tab-count">@_task.Credentials.Count</span>
+                    <span class="glping-fiche-tab-count">@_task.Credentials.Count</span>
                 </button>
             }
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "actors" ? "active" : "")" @onclick='() => SetTab("actors")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "actors" ? "active" : "")" @onclick='() => SetTab("actors")'>
                 <i class="ti ti-target-arrow"></i>
                 <span>Acteurs</span>
-                <span class="glpi-fiche-tab-count">@_task.Actors.Count</span>
+                <span class="glping-fiche-tab-count">@_task.Actors.Count</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
                 <i class="ti ti-history"></i>
                 <span>Exécutions des jobs</span>
-                <span class="glpi-fiche-tab-count">@_task.Jobs.Count</span>
+                <span class="glping-fiche-tab-count">@_task.Jobs.Count</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "main":
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_task.Name" @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="3" @bind="_task.Comment"></textarea>
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Méthode du module</label>
                                 <select class="form-select" value="@_task.Method" @onchange="@((ChangeEventArgs e) => _task.Method = Enum.Parse<NetworkTaskMethod>((string)e.Value!))">
                                     <option value="@NetworkTaskMethod.NetworkDiscovery">Découverte réseau</option>
@@ -118,7 +118,7 @@ else
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Heure de démarrage planifiée</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledStartTime" />
@@ -129,7 +129,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Heure de fin planifiée</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledEndTime" />
@@ -141,7 +141,7 @@ else
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Créneau horaire d'exécution</label>
                                 <div class="input-group">
                                     <select class="form-select" @bind="_task.ExecutionTimeSlotId">
@@ -177,8 +177,8 @@ else
                     break;
 
                 case "ranges":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-list-numbers"></i>Plages IP (@_task.IpRanges.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-list-numbers"></i>Plages IP (@_task.IpRanges.Count)</div>
                         <p class="text-secondary">Plages scannées par cette tâche — gérées depuis <a href="/tools/deployments/ipranges">Plages IP</a>.</p>
 
                         @if (_task.IpRanges.Count > 0)
@@ -232,8 +232,8 @@ else
                     break;
 
                 case "credentials":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-key"></i>Identifiants SNMP (@_task.Credentials.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-key"></i>Identifiants SNMP (@_task.Credentials.Count)</div>
                         <p class="text-secondary">
                             Identifiants essayés sur chaque hôte répondant — gérés depuis <a href="/tools/deployments/snmpcredentials">Identifiants SNMP</a>.
                         </p>
@@ -287,8 +287,8 @@ else
                     break;
 
                 case "actors":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Actors.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Actors.Count)</div>
                         <p class="text-secondary">Agents GLPI-Agent chargés d'exécuter le scan.</p>
 
                         @if (_task.Actors.Count > 0)
@@ -338,12 +338,12 @@ else
                     break;
 
                 case "history":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
 
                         @if (_task.Jobs.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-history-toggle"></i>
                                 <p class="mb-0">Cette tâche n'a jamais été lancée.</p>
                             </div>
@@ -384,7 +384,7 @@ else
                                             {
                                                 <tr>
                                                     <td colspan="6">
-                                                        <div class="glpi-job-log">@RenderLog(job.Log)</div>
+                                                        <div class="glping-job-log">@RenderLog(job.Log)</div>
                                                     </td>
                                                 </tr>
                                             }

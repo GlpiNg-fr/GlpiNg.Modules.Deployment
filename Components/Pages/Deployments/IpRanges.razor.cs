@@ -66,14 +66,14 @@ public partial class IpRanges : ComponentBase
     {
         _editingId = null;
         _editForm = new IpRangeForm();
-        await JS.InvokeVoidAsync("glpiNg.showModal", "ipRangeModal");
+        await JS.InvokeVoidAsync("glping.showModal", "ipRangeModal");
     }
 
     private async Task OpenEditModalAsync(IpRange range)
     {
         _editingId = range.Id;
         _editForm = new IpRangeForm { Name = range.Name, StartIp = range.StartIp, EndIp = range.EndIp, Comment = range.Comment };
-        await JS.InvokeVoidAsync("glpiNg.showModal", "ipRangeModal");
+        await JS.InvokeVoidAsync("glping.showModal", "ipRangeModal");
     }
 
     private async Task SaveAsync()
@@ -108,7 +108,7 @@ public partial class IpRanges : ComponentBase
 
         await db.SaveChangesAsync();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "ipRangeModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "ipRangeModal");
         await LoadAsync();
     }
 

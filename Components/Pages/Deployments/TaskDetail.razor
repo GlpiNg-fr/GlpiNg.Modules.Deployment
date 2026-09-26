@@ -16,15 +16,15 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <a class="glpi-fiche-pager-btn" href="/tools/deployments/tasks" title="Retour à la liste">
+    <div class="glping-fiche-topbar">
+        <a class="glping-fiche-pager-btn" href="/tools/deployments/tasks" title="Retour à la liste">
             <i class="ti ti-list"></i>
         </a>
-        <div class="glpi-fiche-crumb">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-list-check"></i>
             <span>Tâche - @_task.Name - ID @_task.Id</span>
         </div>
-        <div class="glpi-fiche-toolbar">
+        <div class="glping-fiche-toolbar">
             <span class="text-secondary me-2">
                 <i class="ti ti-history me-1"></i>Dernière exécution :
                 @(_task.LastLaunchedAt is { } last ? Display.DateTime(last) : "jamais")
@@ -52,36 +52,36 @@ else
         </div>
     }
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-list-check"></i>
                 <span>Gestion des tâches</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "job" ? "active" : "")" @onclick='() => SetTab("job")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "job" ? "active" : "")" @onclick='() => SetTab("job")'>
                 <i class="ti ti-settings"></i>
                 <span>Configuration du job</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
                 <i class="ti ti-history"></i>
                 <span>Exécutions des jobs</span>
-                <span class="glpi-fiche-tab-count">@_task.Jobs.Count</span>
+                <span class="glping-fiche-tab-count">@_task.Jobs.Count</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "main":
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_task.Name" @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="3" @bind="_task.Comment"></textarea>
                             </div>
@@ -101,7 +101,7 @@ else
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Heure de démarrage planifiée</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledStartTime" />
@@ -112,7 +112,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Heure de fin planifiée</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledEndTime" />
@@ -124,7 +124,7 @@ else
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Créneau horaire de préparation</label>
                                 <div class="input-group">
                                     <select class="form-select" @bind="_task.PreparationTimeSlotId">
@@ -141,7 +141,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Créneau horaire d'exécution</label>
                                 <div class="input-group">
                                     <select class="form-select" @bind="_task.ExecutionTimeSlotId">
@@ -167,7 +167,7 @@ else
                         </div>
 
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Intervalle de réveil des agents (en minutes)</label>
                                 <select class="form-select" @bind="_task.AgentWakeUpIntervalMinutes">
                                     @foreach (int minutes in WakeUpIntervalOptions)
@@ -178,7 +178,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nombre d'agents à réveiller</label>
                                 <select class="form-select" @bind="_task.AgentWakeUpCount">
                                     @foreach (int count in WakeUpCountOptions)
@@ -204,7 +204,7 @@ else
                     break;
 
                 case "job":
-                    <div class="glpi-fiche-field">
+                    <div class="glping-fiche-field">
                         <label>Méthode du module</label>
                         <select class="form-select" disabled>
                             <option>Inventaire distant des hôtes VMware</option>
@@ -216,8 +216,8 @@ else
                         <small class="text-secondary">Seul « Déploiement de package » est disponible dans GlpiNg pour le moment — les autres méthodes suivront (voir les onglets « Réseau »/« Règles »).</small>
                     </div>
 
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-package"></i>Paquets (@_task.Packages.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>Paquets (@_task.Packages.Count)</div>
 
                         @if (_task.Packages.Count > 0)
                         {
@@ -269,8 +269,8 @@ else
                         </div>
                     </div>
 
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Targets.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Targets.Count)</div>
                         <p class="text-secondary">Groupes d'ordinateurs (statiques ou dynamiques) et/ou ordinateurs individuels ciblés par le déploiement.</p>
 
                         @if (_task.Targets.Count > 0)
@@ -363,12 +363,12 @@ else
                     break;
 
                 case "history":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
 
                         @if (_task.Jobs.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-history-toggle"></i>
                                 <p class="mb-0">Cette tâche n'a jamais été lancée.</p>
                             </div>
@@ -409,7 +409,7 @@ else
                                             {
                                                 <tr>
                                                     <td colspan="6">
-                                                        <div class="glpi-job-log">@RenderLog(job.Log)</div>
+                                                        <div class="glping-job-log">@RenderLog(job.Log)</div>
                                                     </td>
                                                 </tr>
                                             }

@@ -16,40 +16,40 @@
 }
 else
 {
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-git-branch"></i>
                 <span>Règle</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
                 <i class="ti ti-filter"></i>
                 <span>Critères</span>
-                <span class="glpi-fiche-tab-count">@_rule.Criteria.Count</span>
+                <span class="glping-fiche-tab-count">@_rule.Criteria.Count</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "actions" ? "active" : "")" @onclick='() => SetTab("actions")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "actions" ? "active" : "")" @onclick='() => SetTab("actions")'>
                 <i class="ti ti-package"></i>
                 <span>Paquets</span>
-                <span class="glpi-fiche-tab-count">@_rule.Actions.Count</span>
+                <span class="glping-fiche-tab-count">@_rule.Actions.Count</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "matches" ? "active" : "")" @onclick='() => SetTab("matches")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "matches" ? "active" : "")" @onclick='() => SetTab("matches")'>
                 <i class="ti ti-list"></i>
                 <span>Correspondances</span>
-                <span class="glpi-fiche-tab-count">@_matches.Count</span>
+                <span class="glping-fiche-tab-count">@_matches.Count</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "main":
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_rule.Name" @bind:event="oninput" />
                             </div>
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Actif</label>
                                 @* Valeur et gestionnaire explicites plutot que @bind : sur un <select> lie a un booleen,
                                    Blazor ecrit dans l'attribut value le resultat de bool.ToString(), soit "True" ou
@@ -63,7 +63,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="4" @bind="_rule.Comment"></textarea>
                             </div>
@@ -81,8 +81,8 @@ else
                     break;
 
                 case "criteria":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_rule.Criteria.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_rule.Criteria.Count)</div>
                         <p class="text-secondary">
                             Un ordinateur correspond à la règle si l'ensemble des critères ci-dessous, combinés dans
                             l'ordre via ET/OU, est vérifié. Sans critère, la règle ne correspond à aucun ordinateur.
@@ -179,8 +179,8 @@ else
                     break;
 
                 case "actions":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-package"></i>Paquets assignés (@_rule.Actions.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>Paquets assignés (@_rule.Actions.Count)</div>
                         <p class="text-secondary">
                             <i class="ti ti-info-circle me-1"></i>Quand la règle correspond, chaque paquet ci-dessous est
                             assigné à l'ordinateur (assignation "à la demande", identique à un clic manuel depuis sa fiche).
@@ -229,8 +229,8 @@ else
                     break;
 
                 case "matches":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_matches.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_matches.Count)</div>
                         <p class="text-secondary">
                             Aperçu en lecture seule des ordinateurs correspondant actuellement aux critères — l'assignation
                             automatique n'a lieu qu'à leur prochain inventaire. Utilisez « Évaluer maintenant » pour
@@ -254,14 +254,14 @@ else
 
                         @if (_rule.Criteria.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-filter"></i>
                                 <p class="mb-0">Ajoutez au moins un critère dans l'onglet « Critères » pour cibler des ordinateurs.</p>
                             </div>
                         }
                         else if (_matches.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-list-search"></i>
                                 <p class="mb-0">Aucun ordinateur ne correspond actuellement à ces critères.</p>
                             </div>

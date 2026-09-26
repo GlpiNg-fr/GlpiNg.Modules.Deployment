@@ -16,47 +16,47 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <div class="glpi-fiche-crumb">
+    <div class="glping-fiche-topbar">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-package"></i>
             <span>Paquet - @_package.Name - ID @_package.Id</span>
         </div>
     </div>
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
             @foreach (var tab in _tabs)
             {
-                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
                     <span>@tab.Label</span>
                     @if (tab.Count is { } count)
                     {
-                        <span class="glpi-fiche-tab-count">@count</span>
+                        <span class="glping-fiche-tab-count">@count</span>
                     }
                 </button>
             }
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "paquet":
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_package.Name" @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="6" @bind="_package.Description"></textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Activer le déploiement à la demande pour le groupe suivant :</label>
                                 <select class="form-select" @bind="_package.DeployComputerGroupId" @bind:after="RebuildTabs">
                                     <option value="">-----</option>
@@ -68,7 +68,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Remplacé par</label>
                                 <select class="form-select" @bind="_package.SupersededByPackageId">
                                     <option value="">-----</option>
@@ -100,10 +100,10 @@ else
                     break;
 
                 case "content":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-list-check"></i>Audits (@_checks.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>Audits (@_checks.Count)</div>
 
-                        <div class="glpi-fiche-block-body">
+                        <div class="glping-fiche-block-body">
                             @if (_checks.Count > 0)
                             {
                                 <div class="table-responsive mb-3">
@@ -137,7 +137,7 @@ else
                                 </div>
                             }
 
-                            <div class="glpi-fiche-add-row">
+                            <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-3">
                                         <label class="form-label">Type</label>
@@ -173,10 +173,10 @@ else
                         </div>
                     </div>
 
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-files"></i>Fichiers (@_package.Files.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-files"></i>Fichiers (@_package.Files.Count)</div>
 
-                        <div class="glpi-fiche-block-body">
+                        <div class="glping-fiche-block-body">
                             @if (_package.Files.Count > 0)
                             {
                                 <div class="table-responsive mb-3">
@@ -223,7 +223,7 @@ else
                                 </div>
                             }
 
-                            <div class="glpi-fiche-add-row">
+                            <div class="glping-fiche-add-row">
                                 <div class="d-flex gap-2 align-items-center">
                                     <input type="file" id="@FileInputElementId" class="form-control" multiple disabled="@_isUploading" />
                                     <button type="button" class="btn btn-primary text-nowrap flex-shrink-0" disabled="@_isUploading" @onclick="StartUploadAsync">
@@ -240,8 +240,8 @@ else
                                             </span>
                                             <span class="text-secondary small">@($"{_currentFileProgress:0}%")</span>
                                         </div>
-                                        <div class="glpi-upload-progress">
-                                            <div class="glpi-upload-progress-fill" style="width: @(_currentFileProgress.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                        <div class="glping-upload-progress">
+                                            <div class="glping-upload-progress-fill" style="width: @(_currentFileProgress.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
                                         </div>
                                     </div>
                                 }
@@ -249,10 +249,10 @@ else
                         </div>
                     </div>
 
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-terminal-2"></i>Actions (@_actions.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-terminal-2"></i>Actions (@_actions.Count)</div>
 
-                        <div class="glpi-fiche-block-body">
+                        <div class="glping-fiche-block-body">
                             @if (_actions.Count > 0)
                             {
                                 <div class="table-responsive mb-3">
@@ -300,7 +300,7 @@ else
                                 <p class="text-secondary small mb-3">Les actions s'exécutent dans l'ordre défini ci-dessus.</p>
                             }
 
-                            <div class="glpi-fiche-add-row">
+                            <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-2">
                                         <label class="form-label">Type</label>
@@ -368,10 +368,10 @@ else
                         </div>
                     </div>
 
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-message-2-question"></i>Interactions utilisateur (@_interactions.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-message-2-question"></i>Interactions utilisateur (@_interactions.Count)</div>
 
-                        <div class="glpi-fiche-block-body">
+                        <div class="glping-fiche-block-body">
                             @if (_interactions.Count > 0)
                             {
                                 <div class="table-responsive mb-3">
@@ -403,7 +403,7 @@ else
                                 </div>
                             }
 
-                            <div class="glpi-fiche-add-row">
+                            <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-3">
                                         <label class="form-label">Type</label>
@@ -434,10 +434,10 @@ else
                     break;
 
                 case "cibles":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-target-arrow"></i>Cibles pour le déploiement à la demande (@_package.Targets.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>Cibles pour le déploiement à la demande (@_package.Targets.Count)</div>
 
-                        <div class="glpi-fiche-block-body">
+                        <div class="glping-fiche-block-body">
                             @if (_package.SupersededByPackageId is not null)
                             {
                                 <div class="alert alert-warning">
@@ -447,7 +447,7 @@ else
                                 </div>
                             }
 
-                            <div class="glpi-fiche-field mb-3" style="max-width: 320px;">
+                            <div class="glping-fiche-field mb-3" style="max-width: 320px;">
                                 <label>Ajouter une cible pour le self-service</label>
                                 <select class="form-select" value="" @onchange="AddTargetAsync">
                                     <option value="">-----</option>

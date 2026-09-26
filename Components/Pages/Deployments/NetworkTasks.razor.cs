@@ -99,7 +99,7 @@ public partial class NetworkTasks : ComponentBase
 
         int newTaskId = _newTask.Id;
         _newTask = NewBlankTask();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newNetworkTaskModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newNetworkTaskModal");
         Nav.NavigateTo($"/tools/deployments/networktasks/{newTaskId}");
     }
 

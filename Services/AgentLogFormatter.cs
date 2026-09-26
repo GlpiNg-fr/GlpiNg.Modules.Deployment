@@ -28,24 +28,24 @@ public static class AgentLogFormatter
             string trimmed = line.Trim();
 
             string lineClass = trimmed.Length > 0 && trimmed.All(c => c == '=')
-                ? "glpi-log-line glpi-log-sep"
+                ? "glping-log-line glping-log-sep"
                 : Regex.IsMatch(line, @"\(ok\)\s*$", RegexOptions.IgnoreCase) || line.Contains("success", StringComparison.OrdinalIgnoreCase)
-                    ? "glpi-log-line glpi-log-ok"
+                    ? "glping-log-line glping-log-ok"
                     : Regex.IsMatch(line, @"\(ko\)\s*$", RegexOptions.IgnoreCase)
                       || line.Contains("error", StringComparison.OrdinalIgnoreCase)
                       || line.Contains("failed", StringComparison.OrdinalIgnoreCase)
-                        ? "glpi-log-line glpi-log-error"
-                        : "glpi-log-line";
+                        ? "glping-log-line glping-log-error"
+                        : "glping-log-line";
 
             html.Append("<div class=\"").Append(lineClass).Append("\">");
 
             Match match = LogLinePrefixRegex.Match(line);
             if (match.Success)
             {
-                html.Append("<span class=\"glpi-log-time\">[").Append(WebUtility.HtmlEncode(match.Groups["time"].Value)).Append("]</span> ");
+                html.Append("<span class=\"glping-log-time\">[").Append(WebUtility.HtmlEncode(match.Groups["time"].Value)).Append("]</span> ");
                 if (match.Groups["tag"].Success)
                 {
-                    html.Append("<span class=\"glpi-log-tag\">[").Append(WebUtility.HtmlEncode(match.Groups["tag"].Value)).Append("]</span> ");
+                    html.Append("<span class=\"glping-log-tag\">[").Append(WebUtility.HtmlEncode(match.Groups["tag"].Value)).Append("]</span> ");
                 }
 
                 html.Append(WebUtility.HtmlEncode(match.Groups["rest"].Value));

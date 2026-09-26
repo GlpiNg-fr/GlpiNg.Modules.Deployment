@@ -127,7 +127,7 @@ public partial class Package : ComponentBase
         await db.SaveChangesAsync();
 
         _newPackage = NewBlankPackage();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newPackageModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newPackageModal");
         await LoadAsync();
     }
 

@@ -16,38 +16,38 @@
 }
 else
 {
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-devices"></i>
                 <span>Groupe d'inventaire</span>
             </button>
             @if (_group.Type == DeployComputerGroupType.Dynamic)
             {
-                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
+                <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
                     <i class="ti ti-filter"></i>
                     <span>Critères</span>
-                    <span class="glpi-fiche-tab-count">@_group.Criteria.Count</span>
+                    <span class="glping-fiche-tab-count">@_group.Criteria.Count</span>
                 </button>
             }
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "members" ? "active" : "")" @onclick='() => SetTab("members")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "members" ? "active" : "")" @onclick='() => SetTab("members")'>
                 <i class="ti ti-list"></i>
                 <span>Éléments rattachés</span>
-                <span class="glpi-fiche-tab-count">@(_group.Type == DeployComputerGroupType.Dynamic ? _dynamicMatches.Count : _group.Members.Count)</span>
+                <span class="glping-fiche-tab-count">@(_group.Type == DeployComputerGroupType.Dynamic ? _dynamicMatches.Count : _group.Members.Count)</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "main":
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_group.Name" @bind:event="oninput" />
                             </div>
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Type</label>
                                 <select class="form-select" @bind="_group.Type">
                                     <option value="@DeployComputerGroupType.Static">Groupe statique</option>
@@ -56,7 +56,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="4" @bind="_group.Comment"></textarea>
                             </div>
@@ -74,8 +74,8 @@ else
                     break;
 
                 case "criteria":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_group.Criteria.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_group.Criteria.Count)</div>
                         <p class="text-secondary">
                             Un ordinateur appartient au groupe si l'ensemble des critères ci-dessous, combinés dans
                             l'ordre via ET/OU, est vérifié. Sans critère, le groupe ne contient aucun ordinateur.
@@ -174,19 +174,19 @@ else
                 case "members":
                     @if (_group.Type == DeployComputerGroupType.Dynamic)
                     {
-                        <div class="glpi-fiche-block">
-                            <div class="glpi-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_dynamicMatches.Count)</div>
+                        <div class="glping-fiche-block">
+                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_dynamicMatches.Count)</div>
 
                             @if (_group.Criteria.Count == 0)
                             {
-                                <div class="glpi-config-placeholder">
+                                <div class="glping-config-placeholder">
                                     <i class="ti ti-filter"></i>
                                     <p class="mb-0">Ajoutez au moins un critère dans l'onglet « Critères » pour peupler ce groupe.</p>
                                 </div>
                             }
                             else if (_dynamicMatches.Count == 0)
                             {
-                                <div class="glpi-config-placeholder">
+                                <div class="glping-config-placeholder">
                                     <i class="ti ti-list-search"></i>
                                     <p class="mb-0">Aucun ordinateur ne correspond actuellement à ces critères.</p>
                                 </div>
@@ -215,8 +215,8 @@ else
                     }
                     else
                     {
-                        <div class="glpi-fiche-block">
-                            <div class="glpi-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs (@_group.Members.Count)</div>
+                        <div class="glping-fiche-block">
+                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs (@_group.Members.Count)</div>
 
                             @if (_group.Members.Count > 0)
                             {

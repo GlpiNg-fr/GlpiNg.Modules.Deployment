@@ -15,16 +15,16 @@
 }
 else
 {
-    <div class="glpi-fiche-block">
+    <div class="glping-fiche-block">
         <div class="row">
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Nom</label>
                     <input class="form-control" @bind="_timeSlot.Name" @bind:event="oninput" />
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Commentaires</label>
                     <textarea class="form-control" rows="2" @bind="_timeSlot.Comment"></textarea>
                 </div>
@@ -40,8 +40,8 @@ else
         </div>
     </div>
 
-    <div class="glpi-fiche-block">
-        <div class="glpi-fiche-block-title"><i class="ti ti-clock"></i>Entrées (@_timeSlot.Entries.Count)</div>
+    <div class="glping-fiche-block">
+        <div class="glping-fiche-block-title"><i class="ti ti-clock"></i>Entrées (@_timeSlot.Entries.Count)</div>
 
         @if (_timeSlot.Entries.Count > 0)
         {

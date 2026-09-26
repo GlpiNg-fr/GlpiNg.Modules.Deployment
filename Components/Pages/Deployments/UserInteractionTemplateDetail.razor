@@ -15,16 +15,16 @@
 }
 else
 {
-    <div class="glpi-fiche-block">
+    <div class="glping-fiche-block">
         <div class="row">
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Nom</label>
                     <input class="form-control" @bind="_template.Name" @bind:event="oninput" />
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Type</label>
                     <select class="form-select" @bind="_template.Type">
                         @foreach (DeploymentUserInteractionType type in Enum.GetValues<DeploymentUserInteractionType>())
@@ -37,13 +37,13 @@ else
         </div>
         <div class="row">
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Texte affiché à l'utilisateur</label>
                     <textarea class="form-control" rows="3" @bind="_template.Text"></textarea>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Commentaires</label>
                     <textarea class="form-control" rows="2" @bind="_template.Comment"></textarea>
                 </div>

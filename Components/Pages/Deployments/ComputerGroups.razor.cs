@@ -77,7 +77,7 @@ public partial class ComputerGroups : ComponentBase
         await db.SaveChangesAsync();
 
         _newGroup = new DeployComputerGroup { Name = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newComputerGroupModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newComputerGroupModal");
         await LoadAsync();
     }
 

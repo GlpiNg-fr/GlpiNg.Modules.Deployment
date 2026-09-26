@@ -105,7 +105,7 @@ public partial class DeploymentRules : ComponentBase
 
         int newId = _newRule.Id;
         _newRule = new DeploymentRule { Name = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newDeploymentRuleModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newDeploymentRuleModal");
         Nav.NavigateTo($"/tools/deployments/rules/{newId}");
     }
 }

@@ -6,9 +6,9 @@
 
 <DeploymentTopMenu Current="interactiontemplates" />
 
-<div class="glpi-list-page">
+<div class="glping-list-page">
 <div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
         <label class="form-check m-0 px-2" title="Tout sélectionner">
             <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
                    @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
@@ -97,11 +97,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body">
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Nom</label>
                     <input class="form-control" @bind="_newTemplate.Name" @bind:event="oninput" />
                 </div>
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Type</label>
                     <select class="form-select" @bind="_newTemplate.Type">
                         @foreach (DeploymentUserInteractionType type in Enum.GetValues<DeploymentUserInteractionType>())
@@ -110,7 +110,7 @@
                         }
                     </select>
                 </div>
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Texte affiché à l'utilisateur</label>
                     <textarea class="form-control" rows="3" @bind="_newTemplate.Text"></textarea>
                 </div>
@@ -118,7 +118,7 @@
                     <input class="form-check-input" type="checkbox" role="switch" id="newTemplateAllowSkip" @bind="_newTemplate.AllowSkip" />
                     <label class="form-check-label" for="newTemplateAllowSkip">Ignorable</label>
                 </div>
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Commentaires</label>
                     <textarea class="form-control" rows="2" @bind="_newTemplate.Comment"></textarea>
                 </div>

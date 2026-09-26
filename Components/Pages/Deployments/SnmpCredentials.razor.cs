@@ -74,7 +74,7 @@ public partial class SnmpCredentials : ComponentBase
     {
         _editingId = null;
         _editForm = new SnmpCredentialForm();
-        await JS.InvokeVoidAsync("glpiNg.showModal", "snmpCredentialModal");
+        await JS.InvokeVoidAsync("glping.showModal", "snmpCredentialModal");
     }
 
     private async Task OpenEditModalAsync(SnmpCredential credential)
@@ -91,7 +91,7 @@ public partial class SnmpCredentials : ComponentBase
             PrivProtocol = credential.PrivProtocol,
             PrivPassphrase = credential.PrivPassphrase
         };
-        await JS.InvokeVoidAsync("glpiNg.showModal", "snmpCredentialModal");
+        await JS.InvokeVoidAsync("glping.showModal", "snmpCredentialModal");
     }
 
     private async Task SaveAsync()
@@ -119,7 +119,7 @@ public partial class SnmpCredentials : ComponentBase
 
         await db.SaveChangesAsync();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "snmpCredentialModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "snmpCredentialModal");
         await LoadAsync();
     }
 

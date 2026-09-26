@@ -131,7 +131,7 @@ public partial class Tasks : ComponentBase
 
         int newTaskId = _newTask.Id;
         _newTask = NewBlankTask();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newTaskModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newTaskModal");
         Nav.NavigateTo($"/tools/deployments/tasks/{newTaskId}");
     }
 

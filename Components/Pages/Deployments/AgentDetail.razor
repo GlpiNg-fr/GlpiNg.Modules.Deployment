@@ -15,63 +15,63 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <a class="glpi-fiche-pager-btn" href="/tools/deployments/agent" title="Retour à la liste">
+    <div class="glping-fiche-topbar">
+        <a class="glping-fiche-pager-btn" href="/tools/deployments/agent" title="Retour à la liste">
             <i class="ti ti-list"></i>
         </a>
-        <div class="glpi-fiche-crumb">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-cpu"></i>
             <span>Agent - @AgentDisplayName(_agent) - ID @_agent.Id</span>
         </div>
-        <div class="glpi-fiche-toolbar">
+        <div class="glping-fiche-toolbar">
             @if (_total > 0)
             {
-                <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/tools/deployments/agent/{prevId}" : "#")">
+                <span class="glping-fiche-pager-count">@_position/@_total</span>
+                <a class="glping-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/tools/deployments/agent/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/tools/deployments/agent/{nextId}" : "#")">
+                <a class="glping-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/tools/deployments/agent/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
         </div>
     </div>
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
             @foreach (var tab in _tabs)
             {
-                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
                     <span>@tab.Label</span>
                     @if (tab.Count is { } count)
                     {
-                        <span class="glpi-fiche-tab-count">@count</span>
+                        <span class="glping-fiche-tab-count">@count</span>
                     }
                 </button>
             }
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "agent":
                     <EditForm Model="_agent" OnValidSubmit="SaveAsync">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Nom</label>
                                     <input class="form-control" @bind="_agent.AgentName" @bind:event="oninput" />
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Étiquette (tag)</label>
                                     <input class="form-control" @bind="_agent.Tag" @bind:event="oninput" />
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Élément lié</label>
                                     @if (_agent.Computer is { } linkedComputer)
                                     {
-                                        <div class="d-flex align-items-center justify-content-between glpi-fiche-value-box">
+                                        <div class="d-flex align-items-center justify-content-between glping-fiche-value-box">
                                             <a href="@($"/parc/computer/{linkedComputer.Id}")" class="text-reset fw-semibold">
                                                 <i class="ti ti-device-desktop me-1 text-secondary"></i>@linkedComputer.Name
                                             </a>
@@ -98,37 +98,37 @@ else
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>ID matériel (deviceid)</label>
-                                    <div class="glpi-fiche-value-box"><code>@(_agent.DeviceId ?? "—")</code></div>
+                                    <div class="glping-fiche-value-box"><code>@(_agent.DeviceId ?? "—")</code></div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>UUID agent</label>
-                                    <div class="glpi-fiche-value-box"><code>@_agent.AgentUuid</code></div>
+                                    <div class="glping-fiche-value-box"><code>@_agent.AgentUuid</code></div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Nom d'hôte</label>
-                                    <div class="glpi-fiche-value-box">@(_agent.Hostname ?? "—")</div>
+                                    <div class="glping-fiche-value-box">@(_agent.Hostname ?? "—")</div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Version de l'agent</label>
-                                    <div class="glpi-fiche-value-box">@(_agent.AgentVersion ?? "—")</div>
+                                    <div class="glping-fiche-value-box">@(_agent.AgentVersion ?? "—")</div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>UserAgent</label>
-                                    <div class="glpi-fiche-value-box">@(_agent.LastUserAgent ?? "—")</div>
+                                    <div class="glping-fiche-value-box">@(_agent.LastUserAgent ?? "—")</div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Adresse de dernier contact</label>
-                                    <div class="glpi-fiche-value-box">@(_agent.LastContactIp ?? "—")</div>
+                                    <div class="glping-fiche-value-box">@(_agent.LastContactIp ?? "—")</div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Premier contact</label>
-                                    <div class="glpi-fiche-value-box">@Display.DateTime(_agent.FirstContactAt)</div>
+                                    <div class="glping-fiche-value-box">@Display.DateTime(_agent.FirstContactAt)</div>
                                 </div>
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Dernier contact</label>
-                                    <div class="glpi-fiche-value-box">@Display.DateTime(_agent.LastContactAt)</div>
+                                    <div class="glping-fiche-value-box">@Display.DateTime(_agent.LastContactAt)</div>
                                 </div>
                             </div>
                         </div>
@@ -145,11 +145,11 @@ else
                     break;
 
                 case "tasks":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-list-check"></i>Tâches installées</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>Tâches installées</div>
                         @if (_agent.InstalledTasks.Length == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-list-check"></i>
                                 <p class="mb-0">Aucune tâche installée signalée.</p>
                             </div>
@@ -170,7 +170,7 @@ else
 
                 default:
                     var current = _tabs.First(t => t.Key == _activeTabKey);
-                    <div class="glpi-config-placeholder">
+                    <div class="glping-config-placeholder">
                         <i class="ti @current.Icon"></i>
                         <p class="mb-0">L'onglet « @current.Label » n'est pas encore disponible.</p>
                     </div>

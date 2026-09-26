@@ -6,7 +6,7 @@
 
 <DeploymentTopMenu Current="discovereddevices" />
 
-<div class="glpi-list-page">
+<div class="glping-list-page">
 
 @if (_message is not null)
 {
@@ -17,7 +17,7 @@
 }
 
 <div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
         <div class="btn-list">
             <select class="form-select" style="max-width: 220px;" value="@_statusFilter" @onchange="OnStatusFilterChanged">
                 <option value="">Tous les statuts</option>

@@ -97,7 +97,7 @@ public partial class WakeOnLanTasks : ComponentBase
 
         int newTaskId = _newTask.Id;
         _newTask = NewBlankTask();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newWakeOnLanTaskModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newWakeOnLanTaskModal");
         Nav.NavigateTo($"/tools/deployments/wakeonlan/{newTaskId}");
     }
 

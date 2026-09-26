@@ -73,7 +73,7 @@ public partial class MirrorServers : ComponentBase
         await db.SaveChangesAsync();
 
         _newMirrorServer = new DeploymentMirrorServer { Name = string.Empty, Url = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newMirrorServerModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newMirrorServerModal");
         await LoadAsync();
     }
 }

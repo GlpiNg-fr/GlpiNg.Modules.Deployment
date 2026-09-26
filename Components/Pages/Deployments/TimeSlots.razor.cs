@@ -73,7 +73,7 @@ public partial class TimeSlots : ComponentBase
         await db.SaveChangesAsync();
 
         _newTimeSlot = new TimeSlot { Name = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newTimeSlotModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newTimeSlotModal");
         await LoadAsync();
     }
 }

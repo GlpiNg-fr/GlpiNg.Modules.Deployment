@@ -15,29 +15,29 @@
 }
 else
 {
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-file-database"></i>
                 <span>Informations de collecte</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "config" ? "active" : "")" @onclick='() => SetTab("config")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "config" ? "active" : "")" @onclick='() => SetTab("config")'>
                 <i class="ti ti-settings"></i>
                 <span>Collect configuration</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "main":
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nom</label>
                                 <input class="form-control" @bind="_collect.Name" @bind:event="oninput" />
                             </div>
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Type</label>
                                 <select class="form-select" @bind="_collect.Type">
                                     <option value="@CollectType.Registry">Base de registre</option>
@@ -51,7 +51,7 @@ else
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Commentaires</label>
                                 <textarea class="form-control" rows="4" @bind="_collect.Comment"></textarea>
                             </div>
@@ -71,8 +71,8 @@ else
                 case "config":
                     @if (_collect.Type == CollectType.Registry)
                     {
-                        <div class="glpi-fiche-block">
-                            <div class="glpi-fiche-block-title"><i class="ti ti-registered"></i>Contenu de la base de registre Windows</div>
+                        <div class="glping-fiche-block">
+                            <div class="glping-fiche-block-title"><i class="ti ti-registered"></i>Contenu de la base de registre Windows</div>
 
                             @if (_collect.RegistryEntries.Count > 0)
                             {
@@ -139,8 +139,8 @@ else
                     }
                     else if (_collect.Type == CollectType.Wmi)
                     {
-                        <div class="glpi-fiche-block">
-                            <div class="glpi-fiche-block-title"><i class="ti ti-server-cog"></i>Collect configuration (WMI)</div>
+                        <div class="glping-fiche-block">
+                            <div class="glping-fiche-block-title"><i class="ti ti-server-cog"></i>Collect configuration (WMI)</div>
 
                             @if (_collect.WmiEntries.Count > 0)
                             {
@@ -202,8 +202,8 @@ else
                     }
                     else
                     {
-                        <div class="glpi-fiche-block">
-                            <div class="glpi-fiche-block-title"><i class="ti ti-file-search"></i>Collect configuration (Recherche de fichier)</div>
+                        <div class="glping-fiche-block">
+                            <div class="glping-fiche-block-title"><i class="ti ti-file-search"></i>Collect configuration (Recherche de fichier)</div>
 
                             @if (_collect.FileSearchEntries.Count > 0)
                             {

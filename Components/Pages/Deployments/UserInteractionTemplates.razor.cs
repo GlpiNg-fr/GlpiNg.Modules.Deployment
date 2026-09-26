@@ -73,7 +73,7 @@ public partial class UserInteractionTemplates : ComponentBase
         await db.SaveChangesAsync();
 
         _newTemplate = new DeploymentUserInteractionTemplate { Name = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newTemplateModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newTemplateModal");
         await LoadAsync();
     }
 

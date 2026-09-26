@@ -73,7 +73,7 @@ public partial class Collects : ComponentBase
         await db.SaveChangesAsync();
 
         _newCollect = new CollectDefinition { Name = string.Empty };
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newCollectModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newCollectModal");
         await LoadAsync();
     }
 

@@ -473,7 +473,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
     /// <summary>
     /// Lance l'envoi des fichiers sélectionnés dans l'input HTML #packageFileInput via
-    /// glpiNg.uploadPackageFiles (glpi-ng.js) : une requête HTTP multipart classique par fichier
+    /// glping.uploadPackageFiles (glping.js) : une requête HTTP multipart classique par fichier
     /// vers DeploymentPackageFilesController, plutôt que via le composant Blazor InputFile — voir
     /// la remarque dans DeploymentPackageFileStorageService sur la fiabilité de InputFile/SignalR
     /// pour les gros fichiers (paquets de plusieurs Go).
@@ -496,7 +496,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
         {
             _dotNetRef ??= DotNetObjectReference.Create(this);
             string uploadUrl = $"/deployment-packages/{_package.Id}/files";
-            int uploadedCount = await JS.InvokeAsync<int>("glpiNg.uploadPackageFiles", FileInputElementId, uploadUrl, _dotNetRef);
+            int uploadedCount = await JS.InvokeAsync<int>("glping.uploadPackageFiles", FileInputElementId, uploadUrl, _dotNetRef);
 
             if (uploadedCount > 0)
             {
@@ -521,7 +521,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
         }
     }
 
-    /// <summary>Rappelée depuis glpiNg.uploadPackageFiles à chaque tick de progression
+    /// <summary>Rappelée depuis glping.uploadPackageFiles à chaque tick de progression
     /// (XMLHttpRequest.upload.onprogress) de l'upload HTTP en cours, un fichier à la fois.</summary>
     [JSInvokable]
     public Task OnUploadProgress(string fileName, int index, int total, double percent)
