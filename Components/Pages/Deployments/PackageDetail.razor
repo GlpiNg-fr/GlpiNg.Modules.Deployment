@@ -3,7 +3,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_package?.Name ?? "Paquet") — GlpiNg</PageTitle>
+<PageTitle>@(_package?.Name ?? T("Paquet")) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="packages" />
 
@@ -11,7 +11,7 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-package-off fs-1"></i>
-        <p class="mt-2">Ce paquet de déploiement est introuvable.</p>
+        <p class="mt-2">@T("Ce paquet de déploiement est introuvable.")</p>
     </div>
 }
 else
@@ -19,7 +19,7 @@ else
     <div class="glping-fiche-topbar">
         <div class="glping-fiche-crumb">
             <i class="ti ti-package"></i>
-            <span>Paquet - @_package.Name - ID @_package.Id</span>
+            <span>@T("Paquet - {0} - ID {1}", _package.Name, _package.Id)</span>
         </div>
     </div>
 
@@ -29,7 +29,7 @@ else
             {
                 <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
-                    <span>@tab.Label</span>
+                    <span>@T(tab.Label)</span>
                     @if (tab.Count is { } count)
                     {
                         <span class="glping-fiche-tab-count">@count</span>
@@ -45,19 +45,19 @@ else
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Nom</label>
+                                <label>@T("Nom")</label>
                                 <input class="form-control" @bind="_package.Name" @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Commentaires</label>
+                                <label>@T("Commentaires")</label>
                                 <textarea class="form-control" rows="6" @bind="_package.Description"></textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Activer le déploiement à la demande pour le groupe suivant :</label>
+                                <label>@T("Activer le déploiement à la demande pour le groupe suivant :")</label>
                                 <select class="form-select" @bind="_package.DeployComputerGroupId" @bind:after="RebuildTabs">
                                     <option value="">-----</option>
                                     @foreach (DeployComputerGroup group in _computerGroups)
@@ -69,7 +69,7 @@ else
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Remplacé par</label>
+                                <label>@T("Remplacé par")</label>
                                 <select class="form-select" @bind="_package.SupersededByPackageId">
                                     <option value="">-----</option>
                                     @foreach (DeploymentPackage other in _otherPackages)
@@ -82,8 +82,7 @@ else
                             {
                                 <div class="alert alert-warning mt-2 mb-0 py-2">
                                     <i class="ti ti-alert-triangle me-1"></i>
-                                    Ce paquet est remplacé : il n'est plus proposé pour le déploiement à la demande,
-                                    même si un groupe est configuré ci-dessus.
+                                    @T("Ce paquet est remplacé : il n'est plus proposé pour le déploiement à la demande, même si un groupe est configuré ci-dessus.")
                                 </div>
                             }
                         </div>
@@ -91,17 +90,17 @@ else
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                         </button>
                         <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                         </button>
                     </div>
                     break;
 
                 case "content":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>Audits (@_checks.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>@T("Audits ({0})", _checks.Count)</div>
 
                         <div class="glping-fiche-block-body">
                             @if (_checks.Count > 0)
@@ -110,10 +109,10 @@ else
                                     <table class="table table-vcenter card-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Type</th>
-                                                <th>Chemin / clef</th>
-                                                <th>Valeur</th>
-                                                <th>Si échec</th>
+                                                <th>@T("Type")</th>
+                                                <th>@T("Chemin / clef")</th>
+                                                <th>@T("Valeur")</th>
+                                                <th>@T("Si échec")</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -124,7 +123,7 @@ else
                                                     <td>@CheckTypeLabel(check.Type)</td>
                                                     <td>@check.Path</td>
                                                     <td>@(check.Value ?? "—")</td>
-                                                    <td>@(check.OnFailure == DeploymentCheckOnFailure.Continue ? "Continuer" : "Sauter le job")</td>
+                                                    <td>@(check.OnFailure == DeploymentCheckOnFailure.Continue ? T("Continuer") : T("Sauter le job"))</td>
                                                     <td class="text-end">
                                                         <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveCheckAsync(check)">
                                                             <i class="ti ti-trash"></i>
@@ -140,7 +139,7 @@ else
                             <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-3">
-                                        <label class="form-label">Type</label>
+                                        <label class="form-label">@T("Type")</label>
                                         <select class="form-select" @bind="_newCheck.Type">
                                             @foreach (DeploymentCheckType type in Enum.GetValues<DeploymentCheckType>())
                                             {
@@ -149,23 +148,23 @@ else
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label">Chemin / clef</label>
+                                        <label class="form-label">@T("Chemin / clef")</label>
                                         <input class="form-control" @bind="_newCheck.Path" />
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label">Valeur</label>
+                                        <label class="form-label">@T("Valeur")</label>
                                         <input class="form-control" @bind="_newCheck.Value" />
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label">Si échec</label>
+                                        <label class="form-label">@T("Si échec")</label>
                                         <select class="form-select" @bind="_newCheck.OnFailure">
-                                            <option value="@DeploymentCheckOnFailure.SkipJob">Sauter le job</option>
-                                            <option value="@DeploymentCheckOnFailure.Continue">Continuer</option>
+                                            <option value="@DeploymentCheckOnFailure.SkipJob">@T("Sauter le job")</option>
+                                            <option value="@DeploymentCheckOnFailure.Continue">@T("Continuer")</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">
                                         <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newCheck.Path)" @onclick="AddCheckAsync">
-                                            <i class="ti ti-plus me-1"></i>Ajouter
+                                            <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                         </button>
                                     </div>
                                 </div>
@@ -174,7 +173,7 @@ else
                     </div>
 
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-files"></i>Fichiers (@_package.Files.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-files"></i>@T("Fichiers ({0})", _package.Files.Count)</div>
 
                         <div class="glping-fiche-block-body">
                             @if (_package.Files.Count > 0)
@@ -183,10 +182,10 @@ else
                                     <table class="table table-vcenter card-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Nom</th>
-                                                <th>SHA-512</th>
-                                                <th>Taille</th>
-                                                <th title="Nombre de fragments stockés pour ce fichier (téléchargement/vérification fragment par fragment côté agent)">Fragments</th>
+                                                <th>@T("Nom")</th>
+                                                <th>@T("SHA-512")</th>
+                                                <th>@T("Taille")</th>
+                                                <th title="@(T("Nombre de fragments stockés pour ce fichier (téléchargement/vérification fragment par fragment côté agent)"))">@T("Fragments")</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -202,8 +201,8 @@ else
                                                         {
                                                             @* Cas d'un paquet repris d'une base GLPI : le fichier est
                                                                déclaré, ses octets sont restés sur le serveur d'origine. *@
-                                                            <span class="badge bg-warning-lt" title="Contenu absent : ce paquet ne peut pas être déployé tant que le fichier n'a pas été téléversé.">
-                                                                <i class="ti ti-upload me-1"></i>À téléverser
+                                                            <span class="badge bg-warning-lt" title="@(T("Contenu absent : ce paquet ne peut pas être déployé tant que le fichier n'a pas été téléversé."))">
+                                                                <i class="ti ti-upload me-1"></i>@T("À téléverser")
                                                             </span>
                                                         }
                                                         else
@@ -227,7 +226,7 @@ else
                                 <div class="d-flex gap-2 align-items-center">
                                     <input type="file" id="@FileInputElementId" class="form-control" multiple disabled="@_isUploading" />
                                     <button type="button" class="btn btn-primary text-nowrap flex-shrink-0" disabled="@_isUploading" @onclick="StartUploadAsync">
-                                        <i class="ti ti-upload me-1"></i>Ajouter
+                                        <i class="ti ti-upload me-1"></i>@T("Ajouter")
                                     </button>
                                 </div>
 
@@ -236,7 +235,7 @@ else
                                     <div class="mt-3">
                                         <div class="d-flex justify-content-between mb-1">
                                             <span class="text-secondary small text-truncate" style="max-width: 70%;">
-                                                <i class="ti ti-loader-2 me-1"></i>@(_currentFileName ?? "Préparation…") (@(_uploadedCount + 1)/@_totalToUpload)
+                                                <i class="ti ti-loader-2 me-1"></i>@(_currentFileName ?? T("Préparation…")) (@(_uploadedCount + 1)/@_totalToUpload)
                                             </span>
                                             <span class="text-secondary small">@($"{_currentFileProgress:0}%")</span>
                                         </div>
@@ -250,7 +249,7 @@ else
                     </div>
 
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-terminal-2"></i>Actions (@_actions.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-terminal-2"></i>@T("Actions ({0})", _actions.Count)</div>
 
                         <div class="glping-fiche-block-body">
                             @if (_actions.Count > 0)
@@ -260,9 +259,9 @@ else
                                         <thead>
                                             <tr>
                                                 <th style="width: 3rem;">#</th>
-                                                <th>Type</th>
-                                                <th>Libellé</th>
-                                                <th>Détail</th>
+                                                <th>@T("Type")</th>
+                                                <th>@T("Libellé")</th>
+                                                <th>@T("Détail")</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -274,20 +273,20 @@ else
                                                 <tr class="@(isEditing ? "table-active" : "")">
                                                     <td class="text-secondary">@(index + 1)</td>
                                                     <td>@ActionTypeLabel(action.Type)</td>
-                                                    <td>@action.Label</td>
+                                                    <td>@T(action.Label)</td>
                                                     <td>@ActionSummary(action)</td>
                                                     <td class="text-end">
                                                         <div class="btn-list justify-content-end flex-nowrap">
-                                                            <button type="button" class="btn btn-sm btn-icon" @onclick="() => EditAction(action)" title="Modifier">
+                                                            <button type="button" class="btn btn-sm btn-icon" @onclick="() => EditAction(action)" title="@(T("Modifier"))">
                                                                 <i class="ti ti-pencil"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == 0)" @onclick="() => MoveActionAsync(action, -1)" title="Monter">
+                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == 0)" @onclick="() => MoveActionAsync(action, -1)" title="@(T("Monter"))">
                                                                 <i class="ti ti-arrow-up"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == _actions.Count - 1)" @onclick="() => MoveActionAsync(action, 1)" title="Descendre">
+                                                            <button type="button" class="btn btn-sm btn-icon" disabled="@(index == _actions.Count - 1)" @onclick="() => MoveActionAsync(action, 1)" title="@(T("Descendre"))">
                                                                 <i class="ti ti-arrow-down"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-icon text-danger" disabled="@isEditing" @onclick="() => RemoveActionAsync(action)" title="Supprimer">
+                                                            <button type="button" class="btn btn-sm btn-icon text-danger" disabled="@isEditing" @onclick="() => RemoveActionAsync(action)" title="@(T("Supprimer"))">
                                                                 <i class="ti ti-trash"></i>
                                                             </button>
                                                         </div>
@@ -297,13 +296,13 @@ else
                                         </tbody>
                                     </table>
                                 </div>
-                                <p class="text-secondary small mb-3">Les actions s'exécutent dans l'ordre défini ci-dessus.</p>
+                                <p class="text-secondary small mb-3">@T("Les actions s'exécutent dans l'ordre défini ci-dessus.")</p>
                             }
 
                             <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-2">
-                                        <label class="form-label">Type</label>
+                                        <label class="form-label">@T("Type")</label>
                                         <select class="form-select" @bind="_newAction.Type">
                                             @foreach (DeploymentActionType type in Enum.GetValues<DeploymentActionType>())
                                             {
@@ -312,40 +311,40 @@ else
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label">Libellé</label>
+                                        <label class="form-label">@T("Libellé")</label>
                                         <input class="form-control" @bind="_newAction.Label" />
                                     </div>
 
                                     @if (_newAction.Type == DeploymentActionType.Command)
                                     {
                                         <div class="col-md-3">
-                                            <label class="form-label">Commande à exécuter</label>
+                                            <label class="form-label">@T("Commande à exécuter")</label>
                                             <input class="form-control" @bind="_newAction.Command" />
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label">Code de retour attendu</label>
+                                            <label class="form-label">@T("Code de retour attendu")</label>
                                             <input type="number" class="form-control" @bind="_newAction.ExpectedReturnCode" />
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label" title="Nombre de lignes de sortie que l'agent doit remonter au serveur pour cette commande. -1 = illimité, 0 = aucune.">Lignes de log à récupérer</label>
+                                            <label class="form-label" title="@(T("Nombre de lignes de sortie que l'agent doit remonter au serveur pour cette commande. -1 = illimité, 0 = aucune."))">@T("Lignes de log à récupérer")</label>
                                             <input type="number" class="form-control" @bind="_newAction.LogLineLimit" />
                                         </div>
                                     }
                                     else if (_newAction.Type is DeploymentActionType.Move or DeploymentActionType.Copy)
                                     {
                                         <div class="col-md-3">
-                                            <label class="form-label">Depuis</label>
+                                            <label class="form-label">@T("Depuis")</label>
                                             <input class="form-control" @bind="_newAction.From" />
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Vers</label>
+                                            <label class="form-label">@T("Vers")</label>
                                             <input class="form-control" @bind="_newAction.To" />
                                         </div>
                                     }
                                     else
                                     {
                                         <div class="col-md-4">
-                                            <label class="form-label">Répertoire</label>
+                                            <label class="form-label">@T("Répertoire")</label>
                                             <input class="form-control" @bind="_newAction.Path" />
                                         </div>
                                     }
@@ -353,11 +352,11 @@ else
                                     <div class="col-md-3">
                                         <div class="d-flex gap-2">
                                             <button type="button" class="btn btn-primary flex-fill" disabled="@(!CanAddAction)" @onclick="SaveActionAsync">
-                                                <i class="ti @(_editingActionEntry is not null ? "ti-device-floppy" : "ti-plus") me-1"></i>@(_editingActionEntry is not null ? "Enregistrer" : "Ajouter")
+                                                <i class="ti @(_editingActionEntry is not null ? "ti-device-floppy" : "ti-plus") me-1"></i>@(_editingActionEntry is not null ? T("Enregistrer") : T("Ajouter"))
                                             </button>
                                             @if (_editingActionEntry is not null)
                                             {
-                                                <button type="button" class="btn btn-outline-secondary" @onclick="CancelEditAction" title="Annuler la modification">
+                                                <button type="button" class="btn btn-outline-secondary" @onclick="CancelEditAction" title="@(T("Annuler la modification"))">
                                                     <i class="ti ti-x"></i>
                                                 </button>
                                             }
@@ -369,7 +368,7 @@ else
                     </div>
 
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-message-2-question"></i>Interactions utilisateur (@_interactions.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-message-2-question"></i>@T("Interactions utilisateur ({0})", _interactions.Count)</div>
 
                         <div class="glping-fiche-block-body">
                             @if (_interactions.Count > 0)
@@ -378,9 +377,9 @@ else
                                     <table class="table table-vcenter card-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Type</th>
-                                                <th>Texte</th>
-                                                <th>Ignorable</th>
+                                                <th>@T("Type")</th>
+                                                <th>@T("Texte")</th>
+                                                <th>@T("Ignorable")</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -390,7 +389,7 @@ else
                                                 <tr>
                                                     <td>@InteractionTypeLabel(interaction.Type)</td>
                                                     <td>@interaction.Text</td>
-                                                    <td>@(interaction.AllowSkip ? "Oui" : "Non")</td>
+                                                    <td>@(interaction.AllowSkip ? T("Oui") : T("Non"))</td>
                                                     <td class="text-end">
                                                         <button type="button" class="btn btn-sm btn-icon text-danger" @onclick="() => RemoveInteractionAsync(interaction)">
                                                             <i class="ti ti-trash"></i>
@@ -406,7 +405,7 @@ else
                             <div class="glping-fiche-add-row">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-3">
-                                        <label class="form-label">Type</label>
+                                        <label class="form-label">@T("Type")</label>
                                         <select class="form-select" @bind="_newInteraction.Type">
                                             @foreach (DeploymentUserInteractionType type in Enum.GetValues<DeploymentUserInteractionType>())
                                             {
@@ -415,16 +414,16 @@ else
                                         </select>
                                     </div>
                                     <div class="col-md-5">
-                                        <label class="form-label">Texte affiché à l'utilisateur</label>
+                                        <label class="form-label">@T("Texte affiché à l'utilisateur")</label>
                                         <input class="form-control" @bind="_newInteraction.Text" />
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-check-label d-block">Ignorable</label>
+                                        <label class="form-check-label d-block">@T("Ignorable")</label>
                                         <input class="form-check-input" type="checkbox" @bind="_newInteraction.AllowSkip" />
                                     </div>
                                     <div class="col-md-2">
                                         <button type="button" class="btn btn-primary w-100" disabled="@string.IsNullOrWhiteSpace(_newInteraction.Text)" @onclick="AddInteractionAsync">
-                                            <i class="ti ti-plus me-1"></i>Ajouter
+                                            <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                         </button>
                                     </div>
                                 </div>
@@ -435,20 +434,19 @@ else
 
                 case "cibles":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>Cibles pour le déploiement à la demande (@_package.Targets.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>@T("Cibles pour le déploiement à la demande ({0})", _package.Targets.Count)</div>
 
                         <div class="glping-fiche-block-body">
                             @if (_package.SupersededByPackageId is not null)
                             {
                                 <div class="alert alert-warning">
                                     <i class="ti ti-alert-triangle me-1"></i>
-                                    Ce paquet est remplacé par « @SupersededByPackageName » : les cibles
-                                    ci-dessous ne sont plus prises en compte pour le déploiement à la demande.
+                                    @T("Ce paquet est remplacé par « {0} » : les cibles ci-dessous ne sont plus prises en compte pour le déploiement à la demande.", SupersededByPackageName)
                                 </div>
                             }
 
                             <div class="glping-fiche-field mb-3" style="max-width: 320px;">
-                                <label>Ajouter une cible pour le self-service</label>
+                                <label>@T("Ajouter une cible pour le self-service")</label>
                                 <select class="form-select" value="" @onchange="AddTargetAsync">
                                     <option value="">-----</option>
                                     <optgroup label="Entité">
@@ -484,13 +482,13 @@ else
                                     <div class="dropdown">
                                         <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
                                                 disabled="@(_selectedTargetIds.Count == 0)">
-                                            <i class="ti ti-trash me-1"></i>Actions
+                                            <i class="ti ti-trash me-1"></i>@T("Actions")
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
-                                            <p class="mb-2">Supprimer @_selectedTargetIds.Count cible(s) sélectionnée(s) ?</p>
+                                            <p class="mb-2">@T("Supprimer {0} cible(s) sélectionnée(s) ?", _selectedTargetIds.Count)</p>
                                             <div class="d-flex justify-content-end gap-2">
-                                                <button type="button" class="btn btn-sm">Annuler</button>
-                                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedTargetsAsync">Supprimer</button>
+                                                <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedTargetsAsync">@T("Supprimer")</button>
                                             </div>
                                         </div>
                                     </div>
@@ -504,8 +502,8 @@ else
                                                     <input class="form-check-input m-0" type="checkbox" checked="@AllTargetsSelected"
                                                            @onchange="@((ChangeEventArgs e) => ToggleSelectAllTargets((bool)(e.Value ?? false)))" />
                                                 </th>
-                                                <th>Type</th>
-                                                <th>Destinataires</th>
+                                                <th>@T("Type")</th>
+                                                <th>@T("Destinataires")</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -526,7 +524,7 @@ else
                             }
                             else
                             {
-                                <p class="text-secondary mb-0">Aucune cible : ce paquet n'est pas proposé en self-service.</p>
+                                <p class="text-secondary mb-0">@T("Aucune cible : ce paquet n'est pas proposé en self-service.")</p>
                             }
                         </div>
                     </div>

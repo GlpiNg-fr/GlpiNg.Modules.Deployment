@@ -2,6 +2,7 @@ using System.Text.Json;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -40,22 +41,22 @@ public sealed class WakeOnLanTaskLaunchService(IDbContextFactory<DbContext> dbFa
 
         if (task is null)
         {
-            return Fail("Tâche introuvable.");
+            return Fail(Tr.T("Tâche introuvable."));
         }
 
         if (!task.IsActive)
         {
-            return Fail("Cette tâche est désactivée.");
+            return Fail(Tr.T("Cette tâche est désactivée."));
         }
 
         if (task.Targets.Count == 0)
         {
-            return Fail("Aucune cible configurée pour cette tâche.");
+            return Fail(Tr.T("Aucune cible configurée pour cette tâche."));
         }
 
         if (task.RelayAgents.Count == 0)
         {
-            return Fail("Aucun agent relais configuré pour cette tâche.");
+            return Fail(Tr.T("Aucun agent relais configuré pour cette tâche."));
         }
 
         HashSet<int> computerIds = [];
@@ -103,7 +104,7 @@ public sealed class WakeOnLanTaskLaunchService(IDbContextFactory<DbContext> dbFa
         if (resolvedTargets.Count == 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            return Fail("Aucun ordinateur ciblé n'a d'adresse MAC connue (voir l'inventaire réseau).");
+            return Fail(Tr.T("Aucun ordinateur ciblé n'a d'adresse MAC connue (voir l'inventaire réseau)."));
         }
 
         string targetMacsJson = JsonSerializer.Serialize(resolvedTargets);
@@ -124,7 +125,7 @@ public sealed class WakeOnLanTaskLaunchService(IDbContextFactory<DbContext> dbFa
         return new WakeOnLanTaskLaunchResult
         {
             Success = true,
-            Message = $"{newJobs.Count} job(s) de réveil créé(s) ({resolvedTargets.Count} ordinateur(s) × {task.RelayAgents.Count} agent(s) relais).",
+            Message = Tr.T("{0} job(s) de réveil créé(s) ({1} ordinateur(s) × {2} agent(s) relais).", newJobs.Count, resolvedTargets.Count, task.RelayAgents.Count),
             JobsCreated = newJobs.Count
         };
     }

@@ -3,6 +3,7 @@ using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -236,12 +237,12 @@ public partial class TaskDetail : ComponentBase, IAsyncDisposable
 
     private static string DayLabel(DayOfWeek day) => TimeSlotHelper.DayLabel(day);
 
-    private static string WakeUpIntervalLabel(int minutes) => minutes == 0 ? "Jamais" : $"{minutes} min";
+    private static string WakeUpIntervalLabel(int minutes) => minutes == 0 ? Tr.T("Jamais") : Tr.T("{0} min", minutes);
 
-    private static string WakeUpCountLabel(int count) => count == 0 ? "Aucun" : count.ToString();
+    private static string WakeUpCountLabel(int count) => count == 0 ? Tr.T("Aucun") : count.ToString();
 
     private static string TargetTypeLabel(DeploymentTaskTargetType type) =>
-        type == DeploymentTaskTargetType.Computer ? "Ordinateur" : "Groupe d'ordinateurs";
+        type == DeploymentTaskTargetType.Computer ? Tr.T("Ordinateur") : Tr.T("Groupe d'ordinateurs");
 
     private static string TargetName(DeploymentTaskTarget target) =>
         target.Type == DeploymentTaskTargetType.Computer
@@ -250,10 +251,10 @@ public partial class TaskDetail : ComponentBase, IAsyncDisposable
 
     private static string StatusLabel(DeploymentStatus status) => status switch
     {
-        DeploymentStatus.Pending => "En attente",
-        DeploymentStatus.Running => "En cours",
-        DeploymentStatus.Success => "Réussi",
-        DeploymentStatus.Error => "En erreur",
+        DeploymentStatus.Pending => Tr.T("En attente"),
+        DeploymentStatus.Running => Tr.T("En cours"),
+        DeploymentStatus.Success => Tr.T("Réussi"),
+        DeploymentStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 
@@ -271,14 +272,14 @@ public partial class TaskDetail : ComponentBase, IAsyncDisposable
     // découvrir le refus après coup.
     private static string? LaunchDisabledReason(DeploymentTask task)
     {
-        if (!task.IsActive) return "Cette tâche est désactivée.";
-        if (task.Packages.Count == 0) return "Aucun paquet configuré.";
-        if (task.Targets.Count == 0) return "Aucun acteur configuré.";
+        if (!task.IsActive) return Tr.T("Cette tâche est désactivée.");
+        if (task.Packages.Count == 0) return Tr.T("Aucun paquet configuré.");
+        if (task.Targets.Count == 0) return Tr.T("Aucun acteur configuré.");
 
         bool hasCompletedRun = task.Jobs.Count > 0 && task.Jobs.All(job => job.Status is DeploymentStatus.Success or DeploymentStatus.Error);
         if (hasCompletedRun && !task.AllowRePreparation)
         {
-            return "Déjà exécutée : activez la re-préparation pour la relancer.";
+            return Tr.T("Déjà exécutée : activez la re-préparation pour la relancer.");
         }
 
         return null;

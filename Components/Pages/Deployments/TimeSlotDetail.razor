@@ -2,7 +2,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_timeSlot?.Name ?? "Créneau horaire") — GlpiNg</PageTitle>
+<PageTitle>@(_timeSlot?.Name ?? T("Créneau horaire")) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="timeslots" />
 
@@ -10,7 +10,7 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-calendar-off fs-1"></i>
-        <p class="mt-2">Ce créneau horaire est introuvable.</p>
+        <p class="mt-2">@T("Ce créneau horaire est introuvable.")</p>
     </div>
 }
 else
@@ -19,29 +19,29 @@ else
         <div class="row">
             <div class="col-md-6">
                 <div class="glping-fiche-field">
-                    <label>Nom</label>
+                    <label>@T("Nom")</label>
                     <input class="form-control" @bind="_timeSlot.Name" @bind:event="oninput" />
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="glping-fiche-field">
-                    <label>Commentaires</label>
+                    <label>@T("Commentaires")</label>
                     <textarea class="form-control" rows="2" @bind="_timeSlot.Comment"></textarea>
                 </div>
             </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
             </button>
             <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
             </button>
         </div>
     </div>
 
     <div class="glping-fiche-block">
-        <div class="glping-fiche-block-title"><i class="ti ti-clock"></i>Entrées (@_timeSlot.Entries.Count)</div>
+        <div class="glping-fiche-block-title"><i class="ti ti-clock"></i>@T("Entrées ({0})", _timeSlot.Entries.Count)</div>
 
         @if (_timeSlot.Entries.Count > 0)
         {
@@ -49,9 +49,9 @@ else
                 <table class="table table-vcenter card-table mb-0">
                     <thead>
                         <tr>
-                            <th>Jour</th>
-                            <th>Début</th>
-                            <th>Fin</th>
+                            <th>@T("Jour")</th>
+                            <th>@T("Début")</th>
+                            <th>@T("Fin")</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -76,28 +76,28 @@ else
 
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">Jour</label>
+                <label class="form-label">@T("Jour")</label>
                 <select class="form-select" @bind="_newDay">
-                    <option value="@DayOfWeek.Monday">Lundi</option>
-                    <option value="@DayOfWeek.Tuesday">Mardi</option>
-                    <option value="@DayOfWeek.Wednesday">Mercredi</option>
-                    <option value="@DayOfWeek.Thursday">Jeudi</option>
-                    <option value="@DayOfWeek.Friday">Vendredi</option>
-                    <option value="@DayOfWeek.Saturday">Samedi</option>
-                    <option value="@DayOfWeek.Sunday">Dimanche</option>
+                    <option value="@DayOfWeek.Monday">@T("Lundi")</option>
+                    <option value="@DayOfWeek.Tuesday">@T("Mardi")</option>
+                    <option value="@DayOfWeek.Wednesday">@T("Mercredi")</option>
+                    <option value="@DayOfWeek.Thursday">@T("Jeudi")</option>
+                    <option value="@DayOfWeek.Friday">@T("Vendredi")</option>
+                    <option value="@DayOfWeek.Saturday">@T("Samedi")</option>
+                    <option value="@DayOfWeek.Sunday">@T("Dimanche")</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Heure de début</label>
+                <label class="form-label">@T("Heure de début")</label>
                 <input type="time" class="form-control" @bind="_newStart" />
             </div>
             <div class="col-md-3">
-                <label class="form-label">Heure de fin</label>
+                <label class="form-label">@T("Heure de fin")</label>
                 <input type="time" class="form-control" @bind="_newEnd" />
             </div>
             <div class="col-md-3">
                 <button type="button" class="btn btn-primary w-100" @onclick="AddEntryAsync">
-                    <i class="ti ti-plus me-1"></i>Ajouter
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                 </button>
             </div>
         </div>

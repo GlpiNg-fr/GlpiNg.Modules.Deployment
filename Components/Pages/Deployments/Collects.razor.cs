@@ -2,6 +2,7 @@ using GlpiNg.Modules.Deployment.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -79,9 +80,9 @@ public partial class Collects : ComponentBase
 
     private static string TypeLabel(CollectType type) => type switch
     {
-        CollectType.Registry => "Base de registre",
-        CollectType.Wmi => "WMI",
-        CollectType.FileSearch => "Recherche de fichier",
+        CollectType.Registry => Tr.T("Base de registre"),
+        CollectType.Wmi => Tr.T("WMI"),
+        CollectType.FileSearch => Tr.T("Recherche de fichier"),
         _ => type.ToString()
     };
 }

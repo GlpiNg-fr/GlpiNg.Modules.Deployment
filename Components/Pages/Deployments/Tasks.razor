@@ -2,7 +2,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>Déploiements — GlpiNg</PageTitle>
+<PageTitle>@T("Déploiements — GlpiNg")</PageTitle>
 
 <DeploymentTopMenu Current="tasks" />
 
@@ -21,14 +21,14 @@
         <div class="btn-list">
             <div class="dropdown">
                 <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-search me-1"></i>Rechercher
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
                 </button>
                 <div class="dropdown-menu p-3" style="min-width: 280px;">
                     <div class="input-icon">
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
                         </span>
-                        <input type="text" class="form-control" placeholder="Rechercher une tâche..."
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher une tâche..."))"
                                @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
                     </div>
                 </div>
@@ -36,31 +36,31 @@
         </div>
 
         <div class="btn-list align-items-center">
-            <label class="form-check m-0 px-2" title="Tout sélectionner">
+            <label class="form-check m-0 px-2" title="@(T("Tout sélectionner"))">
                 <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
                        @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
             </label>
 
             <div class="dropdown">
                 <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
-                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                        disabled="@(_selectedIds.Count == 0)" title="@(T("Supprimer la sélection"))">
                     <i class="ti ti-trash"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
-                    <p class="mb-2">Supprimer @_selectedIds.Count tâche(s) sélectionnée(s) ? Cette action est définitive.</p>
+                    <p class="mb-2">@T("Supprimer {0} tâche(s) sélectionnée(s) ? Cette action est définitive.", _selectedIds.Count)</p>
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm">Annuler</button>
-                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                        <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">@T("Supprimer")</button>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
 
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
-                <i class="ti ti-plus me-1"></i>Nouvelle tâche
+                <i class="ti ti-plus me-1"></i>@T("Nouvelle tâche")
             </button>
         </div>
     </div>
@@ -72,16 +72,16 @@
                     <th style="width: 2.5rem;">
                         @* Ne coche que les lignes affichées — la page courante là où le tableau est
                            paginé : cocher ici ne doit jamais engager plus que ce qu'on voit. *@
-                        <input class="form-check-input m-0" type="checkbox" title="Sélectionner les éléments visibles"
+                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les éléments visibles"))"
                                checked="@AllSelected"
                                @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
                     </th>
-                    <th>Nom</th>
-                    <th>Méthode</th>
-                    <th>Paquets</th>
-                    <th>Acteurs</th>
-                    <th>Activé</th>
-                    <th>Dernière exécution</th>
+                    <th>@T("Nom")</th>
+                    <th>@T("Méthode")</th>
+                    <th>@T("Paquets")</th>
+                    <th>@T("Acteurs")</th>
+                    <th>@T("Activé")</th>
+                    <th>@T("Dernière exécution")</th>
                     <th></th>
                 </tr>
             </thead>
@@ -89,7 +89,7 @@
                 @if (_filteredTasks.Count == 0)
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-secondary py-4">Aucune tâche de déploiement trouvée.</td>
+                        <td colspan="8" class="text-center text-secondary py-4">@T("Aucune tâche de déploiement trouvée.")</td>
                     </tr>
                 }
                 else
@@ -107,39 +107,39 @@
                                     <i class="ti ti-list-check me-1 text-secondary"></i>@task.Name
                                 </a>
                             </td>
-                            <td><span class="badge bg-blue-lt"><i class="ti ti-rocket me-1"></i>Déploiement de paquet</span></td>
+                            <td><span class="badge bg-blue-lt"><i class="ti ti-rocket me-1"></i>@T("Déploiement de paquet")</span></td>
                             <td>
                                 @if (task.Packages.Count == 0)
                                 {
-                                    <span class="text-secondary">Aucun paquet</span>
+                                    <span class="text-secondary">@T("Aucun paquet")</span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-blue-lt" title="@string.Join(", ", task.Packages.Select(p => p.Package?.Name))">
-                                        @task.Packages.Count paquet(s)
+                                        @T("{0} paquet(s)", task.Packages.Count)
                                     </span>
                                 }
                             </td>
                             <td>
                                 @if (task.Targets.Count == 0)
                                 {
-                                    <span class="text-secondary">Aucun acteur</span>
+                                    <span class="text-secondary">@T("Aucun acteur")</span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-azure-lt" title="@string.Join(", ", task.Targets.Select(TargetName))">
-                                        @task.Targets.Count acteur(s)
+                                        @T("{0} acteur(s)", task.Targets.Count)
                                     </span>
                                 }
                             </td>
                             <td>
                                 @if (task.IsActive)
                                 {
-                                    <span class="badge bg-success-lt">Oui</span>
+                                    <span class="badge bg-success-lt">@T("Oui")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary-lt">Non</span>
+                                    <span class="badge bg-secondary-lt">@T("Non")</span>
                                 }
                             </td>
                             <td>
@@ -149,30 +149,30 @@
                                     <div class="d-flex gap-1">
                                         @if (pending > 0)
                                         {
-                                            <span class="badge bg-secondary-lt" title="En attente">@pending</span>
+                                            <span class="badge bg-secondary-lt" title="@(T("En attente"))">@pending</span>
                                         }
                                         @if (running > 0)
                                         {
-                                            <span class="badge bg-azure-lt" title="En cours">@running</span>
+                                            <span class="badge bg-azure-lt" title="@(T("En cours"))">@running</span>
                                         }
                                         @if (success > 0)
                                         {
-                                            <span class="badge bg-success-lt" title="Réussi">@success</span>
+                                            <span class="badge bg-success-lt" title="@(T("Réussi"))">@success</span>
                                         }
                                         @if (error > 0)
                                         {
-                                            <span class="badge bg-danger-lt" title="En erreur">@error</span>
+                                            <span class="badge bg-danger-lt" title="@(T("En erreur"))">@error</span>
                                         }
                                     </div>
                                 }
                                 else
                                 {
-                                    <span class="text-secondary">Jamais lancée</span>
+                                    <span class="text-secondary">@T("Jamais lancée")</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm" disabled="@(LaunchDisabledReason(task) is not null || _launchingTaskId is not null)"
-                                        @onclick="() => LaunchAsync(task.Id)" title="@(LaunchDisabledReason(task) ?? "Lancer maintenant")">
+                                        @onclick="() => LaunchAsync(task.Id)" title="@(LaunchDisabledReason(task) ?? T("Lancer maintenant"))">
                                     @if (_launchingTaskId == task.Id)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
@@ -181,7 +181,7 @@
                                     {
                                         <i class="ti ti-player-play me-1"></i>
                                     }
-                                    Lancer
+                                    @T("Lancer")
                                 </button>
                             </td>
                         </tr>
@@ -197,26 +197,26 @@
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="ti ti-list-check me-2"></i>Nouvel élément - Tâche</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                <h5 class="modal-title"><i class="ti ti-list-check me-2"></i>@T("Nouvel élément - Tâche")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
             </div>
             <div class="modal-body">
                 <div class="glping-fiche-field">
-                    <label>Nom</label>
+                    <label>@T("Nom")</label>
                     <input class="form-control" @bind="_newTask.Name" @bind:event="oninput" />
                 </div>
                 <div class="glping-fiche-field">
-                    <label>Commentaires</label>
+                    <label>@T("Commentaires")</label>
                     <textarea class="form-control" rows="3" @bind="_newTask.Comment"></textarea>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="newTaskAllowRePreparation" @bind="_newTask.AllowRePreparation" />
-                    <label class="form-check-label" for="newTaskAllowRePreparation">Permet la re-préparation de la tâche après son exécution</label>
+                    <label class="form-check-label" for="newTaskAllowRePreparation">@T("Permet la re-préparation de la tâche après son exécution")</label>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@string.IsNullOrWhiteSpace(_newTask.Name)" @onclick="CreateTaskAsync">
-                    <i class="ti ti-plus me-1"></i>Ajouter
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                 </button>
             </div>
         </div>

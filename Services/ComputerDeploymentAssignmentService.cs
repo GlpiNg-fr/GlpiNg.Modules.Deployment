@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
@@ -123,7 +124,7 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             return new DeploymentAssignmentResult
             {
                 Status = DeploymentAssignmentStatus.NoAgent,
-                ErrorMessage = "Ce poste n'est associé à aucun agent GLPI-Agent."
+                ErrorMessage = Tr.T("Ce poste n'est associé à aucun agent GLPI-Agent.")
             };
         }
 
@@ -135,7 +136,7 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             return new DeploymentAssignmentResult
             {
                 Status = DeploymentAssignmentStatus.PackageNotFound,
-                ErrorMessage = "Au moins un des paquets sélectionnés n'existe plus."
+                ErrorMessage = Tr.T("Au moins un des paquets sélectionnés n'existe plus.")
             };
         }
 
@@ -149,7 +150,7 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
             return new DeploymentAssignmentResult
             {
                 Status = DeploymentAssignmentStatus.PackageNotFound,
-                ErrorMessage = "Au moins un des paquets sélectionnés n'est plus proposé en déploiement à la demande pour ce poste.",
+                ErrorMessage = Tr.T("Au moins un des paquets sélectionnés n'est plus proposé en déploiement à la demande pour ce poste."),
             };
         }
 
@@ -271,10 +272,10 @@ public sealed class ComputerDeploymentAssignmentService(IDbContextFactory<DbCont
 
     private static string StatusLabel(DeploymentStatus status) => status switch
     {
-        DeploymentStatus.Pending => "En attente",
-        DeploymentStatus.Running => "En cours",
-        DeploymentStatus.Success => "Réussi",
-        DeploymentStatus.Error => "En erreur",
+        DeploymentStatus.Pending => Tr.T("En attente"),
+        DeploymentStatus.Running => Tr.T("En cours"),
+        DeploymentStatus.Success => Tr.T("Réussi"),
+        DeploymentStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 

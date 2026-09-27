@@ -2,7 +2,7 @@
 @using GlpiNg.Modules.Inventory.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_agent is null ? "Agent" : AgentDisplayName(_agent)) — GlpiNg</PageTitle>
+<PageTitle>@(_agent is null ? T("Agent") : AgentDisplayName(_agent)) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="agents" />
 
@@ -10,18 +10,18 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-cpu-off fs-1"></i>
-        <p class="mt-2">Cet agent est introuvable.</p>
+        <p class="mt-2">@T("Cet agent est introuvable.")</p>
     </div>
 }
 else
 {
     <div class="glping-fiche-topbar">
-        <a class="glping-fiche-pager-btn" href="/tools/deployments/agent" title="Retour à la liste">
+        <a class="glping-fiche-pager-btn" href="/tools/deployments/agent" title="@(T("Retour à la liste"))">
             <i class="ti ti-list"></i>
         </a>
         <div class="glping-fiche-crumb">
             <i class="ti ti-cpu"></i>
-            <span>Agent - @AgentDisplayName(_agent) - ID @_agent.Id</span>
+            <span>@T("Agent -") @AgentDisplayName(_agent) @T("- ID {0}", _agent.Id)</span>
         </div>
         <div class="glping-fiche-toolbar">
             @if (_total > 0)
@@ -43,7 +43,7 @@ else
             {
                 <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
-                    <span>@tab.Label</span>
+                    <span>@T(tab.Label)</span>
                     @if (tab.Count is { } count)
                     {
                         <span class="glping-fiche-tab-count">@count</span>
@@ -60,15 +60,15 @@ else
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="glping-fiche-field">
-                                    <label>Nom</label>
+                                    <label>@T("Nom")</label>
                                     <input class="form-control" @bind="_agent.AgentName" @bind:event="oninput" />
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Étiquette (tag)</label>
+                                    <label>@T("Étiquette (tag)")</label>
                                     <input class="form-control" @bind="_agent.Tag" @bind:event="oninput" />
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Élément lié</label>
+                                    <label>@T("Élément lié")</label>
                                     @if (_agent.Computer is { } linkedComputer)
                                     {
                                         <div class="d-flex align-items-center justify-content-between glping-fiche-value-box">
@@ -76,7 +76,7 @@ else
                                                 <i class="ti ti-device-desktop me-1 text-secondary"></i>@linkedComputer.Name
                                             </a>
                                             <button type="button" class="btn btn-sm btn-outline-danger" @onclick="UnlinkComputerAsync">
-                                                <i class="ti ti-plug-connected-x me-1"></i>Déconnecter
+                                                <i class="ti ti-plug-connected-x me-1"></i>@T("Déconnecter")
                                             </button>
                                         </div>
                                     }
@@ -84,14 +84,14 @@ else
                                     {
                                         <div class="d-flex gap-2">
                                             <select class="form-select" @bind="_computerIdToLink">
-                                                <option value="0">-- Choisir un ordinateur --</option>
+                                                <option value="0">@T("-- Choisir un ordinateur --")</option>
                                                 @foreach (Computer computer in _availableComputers)
                                                 {
                                                     <option value="@computer.Id">@computer.Name</option>
                                                 }
                                             </select>
                                             <button type="button" class="btn btn-primary text-nowrap" disabled="@(_computerIdToLink == 0)" @onclick="LinkComputerAsync">
-                                                <i class="ti ti-plug-connected me-1"></i>Connecter
+                                                <i class="ti ti-plug-connected me-1"></i>@T("Connecter")
                                             </button>
                                         </div>
                                     }
@@ -99,35 +99,35 @@ else
                             </div>
                             <div class="col-md-6">
                                 <div class="glping-fiche-field">
-                                    <label>ID matériel (deviceid)</label>
+                                    <label>@T("ID matériel (deviceid)")</label>
                                     <div class="glping-fiche-value-box"><code>@(_agent.DeviceId ?? "—")</code></div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>UUID agent</label>
+                                    <label>@T("UUID agent")</label>
                                     <div class="glping-fiche-value-box"><code>@_agent.AgentUuid</code></div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Nom d'hôte</label>
+                                    <label>@T("Nom d'hôte")</label>
                                     <div class="glping-fiche-value-box">@(_agent.Hostname ?? "—")</div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Version de l'agent</label>
+                                    <label>@T("Version de l'agent")</label>
                                     <div class="glping-fiche-value-box">@(_agent.AgentVersion ?? "—")</div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>UserAgent</label>
+                                    <label>@T("UserAgent")</label>
                                     <div class="glping-fiche-value-box">@(_agent.LastUserAgent ?? "—")</div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Adresse de dernier contact</label>
+                                    <label>@T("Adresse de dernier contact")</label>
                                     <div class="glping-fiche-value-box">@(_agent.LastContactIp ?? "—")</div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Premier contact</label>
+                                    <label>@T("Premier contact")</label>
                                     <div class="glping-fiche-value-box">@Display.DateTime(_agent.FirstContactAt)</div>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Dernier contact</label>
+                                    <label>@T("Dernier contact")</label>
                                     <div class="glping-fiche-value-box">@Display.DateTime(_agent.LastContactAt)</div>
                                 </div>
                             </div>
@@ -135,10 +135,10 @@ else
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                                <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                             </button>
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                             </button>
                         </div>
                     </EditForm>
@@ -146,12 +146,12 @@ else
 
                 case "tasks":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>Tâches installées</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-list-check"></i>@T("Tâches installées")</div>
                         @if (_agent.InstalledTasks.Length == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-list-check"></i>
-                                <p class="mb-0">Aucune tâche installée signalée.</p>
+                                <p class="mb-0">@T("Aucune tâche installée signalée.")</p>
                             </div>
                         }
                         else
@@ -160,7 +160,7 @@ else
                                 @foreach (string task in _agent.InstalledTasks)
                                 {
                                     <span class="badge @(_agent.EnabledTasks.Contains(task) ? "bg-green-lt" : "bg-secondary-lt")">
-                                        @TaskLabel(task)@(_agent.EnabledTasks.Contains(task) ? "" : " (désactivée)")
+                                        @TaskLabel(task)@(_agent.EnabledTasks.Contains(task) ? "" : T(" (désactivée)"))
                                     </span>
                                 }
                             </div>
@@ -172,7 +172,7 @@ else
                     var current = _tabs.First(t => t.Key == _activeTabKey);
                     <div class="glping-config-placeholder">
                         <i class="ti @current.Icon"></i>
-                        <p class="mb-0">L'onglet « @current.Label » n'est pas encore disponible.</p>
+                        <p class="mb-0">@T("L'onglet « {0} » n'est pas encore disponible.", current.Label)</p>
                     </div>
                     break;
             }

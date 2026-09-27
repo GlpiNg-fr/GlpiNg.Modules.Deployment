@@ -3,7 +3,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_rule?.Name ?? "Règle de déploiement") — GlpiNg</PageTitle>
+<PageTitle>@(_rule?.Name ?? T("Règle de déploiement")) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="rules" />
 
@@ -11,7 +11,7 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-git-branch fs-1"></i>
-        <p class="mt-2">Cette règle est introuvable.</p>
+        <p class="mt-2">@T("Cette règle est introuvable.")</p>
     </div>
 }
 else
@@ -20,21 +20,21 @@ else
         <aside class="glping-fiche-sidebar">
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-git-branch"></i>
-                <span>Règle</span>
+                <span>@T("Règle")</span>
             </button>
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
                 <i class="ti ti-filter"></i>
-                <span>Critères</span>
+                <span>@T("Critères")</span>
                 <span class="glping-fiche-tab-count">@_rule.Criteria.Count</span>
             </button>
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "actions" ? "active" : "")" @onclick='() => SetTab("actions")'>
                 <i class="ti ti-package"></i>
-                <span>Paquets</span>
+                <span>@T("Paquets")</span>
                 <span class="glping-fiche-tab-count">@_rule.Actions.Count</span>
             </button>
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "matches" ? "active" : "")" @onclick='() => SetTab("matches")'>
                 <i class="ti ti-list"></i>
-                <span>Correspondances</span>
+                <span>@T("Correspondances")</span>
                 <span class="glping-fiche-tab-count">@_matches.Count</span>
             </button>
         </aside>
@@ -46,25 +46,25 @@ else
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Nom</label>
+                                <label>@T("Nom")</label>
                                 <input class="form-control" @bind="_rule.Name" @bind:event="oninput" />
                             </div>
                             <div class="glping-fiche-field">
-                                <label>Actif</label>
+                                <label>@T("Actif")</label>
                                 @* Valeur et gestionnaire explicites plutot que @bind : sur un <select> lie a un booleen,
                                    Blazor ecrit dans l'attribut value le resultat de bool.ToString(), soit "True" ou
                                    "False". Aucune option en minuscules ne correspondait alors, la liste restait bloquee
                                    sur son premier choix et le modele n'etait jamais mis a jour. *@
                                 <select class="form-select" value="@(_rule.IsActive ? "true" : "false")"
                                         @onchange="@((ChangeEventArgs e) => _rule.IsActive = (string?)e.Value == "true")">
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="true">@T("Oui")</option>
+                                    <option value="false">@T("Non")</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Commentaires</label>
+                                <label>@T("Commentaires")</label>
                                 <textarea class="form-control" rows="4" @bind="_rule.Comment"></textarea>
                             </div>
                         </div>
@@ -72,20 +72,19 @@ else
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                         </button>
                         <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                         </button>
                     </div>
                     break;
 
                 case "criteria":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_rule.Criteria.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>@T("Critères ({0})", _rule.Criteria.Count)</div>
                         <p class="text-secondary">
-                            Un ordinateur correspond à la règle si l'ensemble des critères ci-dessous, combinés dans
-                            l'ordre via ET/OU, est vérifié. Sans critère, la règle ne correspond à aucun ordinateur.
+                            @T("Un ordinateur correspond à la règle si l'ensemble des critères ci-dessous, combinés dans l'ordre via ET/OU, est vérifié. Sans critère, la règle ne correspond à aucun ordinateur.")
                         </p>
 
                         @if (_rule.Criteria.Count > 0)
@@ -94,10 +93,10 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Lien</th>
-                                            <th>Champ</th>
-                                            <th>Opérateur</th>
-                                            <th>Valeur</th>
+                                            <th>@T("Lien")</th>
+                                            <th>@T("Champ")</th>
+                                            <th>@T("Opérateur")</th>
+                                            <th>@T("Valeur")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -123,14 +122,14 @@ else
 
                         <div class="row g-2 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Lien</label>
+                                <label class="form-label">@T("Lien")</label>
                                 <select class="form-select" @bind="_newCriterion.Link" disabled="@(_rule.Criteria.Count == 0)">
-                                    <option value="@DeployCriterionLink.And">ET</option>
-                                    <option value="@DeployCriterionLink.Or">OU</option>
+                                    <option value="@DeployCriterionLink.And">@T("ET")</option>
+                                    <option value="@DeployCriterionLink.Or">@T("OU")</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Champ</label>
+                                <label class="form-label">@T("Champ")</label>
                                 <select class="form-select" @bind="_newCriterion.Field" @bind:after="OnCriterionFieldChanged">
                                     @foreach (DeployCriterionField field in Enum.GetValues<DeployCriterionField>())
                                     {
@@ -139,7 +138,7 @@ else
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Opérateur</label>
+                                <label class="form-label">@T("Opérateur")</label>
                                 <select class="form-select" @bind="_newCriterion.Operator" @bind:after="OnCriterionOperatorChanged">
                                     @foreach (DeployCriterionOperator op in Enum.GetValues<DeployCriterionOperator>())
                                     {
@@ -148,7 +147,7 @@ else
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Valeur</label>
+                                <label class="form-label">@T("Valeur")</label>
                                 @if (_newCriterion.Operator == DeployCriterionOperator.IsEmpty)
                                 {
                                     <input class="form-control" disabled placeholder="—" />
@@ -171,7 +170,7 @@ else
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-primary w-100" @onclick="AddCriterionAsync">
-                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                 </button>
                             </div>
                         </div>
@@ -180,10 +179,9 @@ else
 
                 case "actions":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>Paquets assignés (@_rule.Actions.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>@T("Paquets assignés ({0})", _rule.Actions.Count)</div>
                         <p class="text-secondary">
-                            <i class="ti ti-info-circle me-1"></i>Quand la règle correspond, chaque paquet ci-dessous est
-                            assigné à l'ordinateur (assignation "à la demande", identique à un clic manuel depuis sa fiche).
+                            <i class="ti ti-info-circle me-1"></i>@T("Quand la règle correspond, chaque paquet ci-dessous est assigné à l'ordinateur (assignation \"à la demande\", identique à un clic manuel depuis sa fiche).")
                         </p>
 
                         @if (_rule.Actions.Count > 0)
@@ -192,7 +190,7 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Paquet</th>
+                                            <th>@T("Paquet")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -215,14 +213,14 @@ else
 
                         <div class="d-flex gap-2">
                             <select class="form-select" style="max-width: 320px;" @bind="_packageIdToAdd">
-                                <option value="0">-- Choisir un paquet --</option>
+                                <option value="0">@T("-- Choisir un paquet --")</option>
                                 @foreach (DeploymentPackage package in _availablePackages)
                                 {
                                     <option value="@package.Id">@package.Name</option>
                                 }
                             </select>
                             <button type="button" class="btn btn-primary" disabled="@(_packageIdToAdd == 0)" @onclick="AddActionAsync">
-                                <i class="ti ti-plus me-1"></i>Ajouter
+                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                             </button>
                         </div>
                     </div>
@@ -230,20 +228,18 @@ else
 
                 case "matches":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_matches.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-list"></i>@T("Ordinateurs correspondants ({0})", _matches.Count)</div>
                         <p class="text-secondary">
-                            Aperçu en lecture seule des ordinateurs correspondant actuellement aux critères — l'assignation
-                            automatique n'a lieu qu'à leur prochain inventaire. Utilisez « Évaluer maintenant » pour
-                            l'appliquer tout de suite au parc existant.
+                            @T("Aperçu en lecture seule des ordinateurs correspondant actuellement aux critères — l'assignation automatique n'a lieu qu'à leur prochain inventaire. Utilisez « Évaluer maintenant » pour l'appliquer tout de suite au parc existant.")
                         </p>
 
                         <div class="d-flex align-items-center gap-2 mb-3">
                             <button type="button" class="btn btn-primary" disabled="@(_isEvaluating || _rule.Actions.Count == 0)" @onclick="EvaluateNowAsync">
-                                <i class="ti ti-player-play me-1"></i>@(_isEvaluating ? "Évaluation…" : "Évaluer maintenant")
+                                <i class="ti ti-player-play me-1"></i>@(_isEvaluating ? T("Évaluation…") : T("Évaluer maintenant"))
                             </button>
                             @if (_rule.Actions.Count == 0)
                             {
-                                <span class="text-secondary small">Ajoutez au moins un paquet dans l'onglet « Paquets ».</span>
+                                <span class="text-secondary small">@T("Ajoutez au moins un paquet dans l'onglet « Paquets ».")</span>
                             }
                         </div>
 
@@ -256,14 +252,14 @@ else
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-filter"></i>
-                                <p class="mb-0">Ajoutez au moins un critère dans l'onglet « Critères » pour cibler des ordinateurs.</p>
+                                <p class="mb-0">@T("Ajoutez au moins un critère dans l'onglet « Critères » pour cibler des ordinateurs.")</p>
                             </div>
                         }
                         else if (_matches.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-list-search"></i>
-                                <p class="mb-0">Aucun ordinateur ne correspond actuellement à ces critères.</p>
+                                <p class="mb-0">@T("Aucun ordinateur ne correspond actuellement à ces critères.")</p>
                             </div>
                         }
                         else
@@ -272,7 +268,7 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Nom</th>
+                                            <th>@T("Nom")</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -296,29 +292,29 @@ else
 @code {
     private static string FieldLabel(DeployCriterionField field) => field switch
     {
-        DeployCriterionField.Name => "Nom",
-        DeployCriterionField.SerialNumber => "Numéro de série",
-        DeployCriterionField.Manufacturer => "Fabricant",
-        DeployCriterionField.Model => "Modèle",
-        DeployCriterionField.OperatingSystem => "Système d'exploitation",
-        DeployCriterionField.OsVersion => "Version de l'OS",
-        DeployCriterionField.Status => "Statut",
-        DeployCriterionField.Site => "Site",
-        DeployCriterionField.Building => "Bâtiment",
-        DeployCriterionField.Room => "Salle",
-        DeployCriterionField.AssignedUser => "Utilisateur",
+        DeployCriterionField.Name => T("Nom"),
+        DeployCriterionField.SerialNumber => T("Numéro de série"),
+        DeployCriterionField.Manufacturer => T("Fabricant"),
+        DeployCriterionField.Model => T("Modèle"),
+        DeployCriterionField.OperatingSystem => T("Système d'exploitation"),
+        DeployCriterionField.OsVersion => T("Version de l'OS"),
+        DeployCriterionField.Status => T("Statut"),
+        DeployCriterionField.Site => T("Site"),
+        DeployCriterionField.Building => T("Bâtiment"),
+        DeployCriterionField.Room => T("Salle"),
+        DeployCriterionField.AssignedUser => T("Utilisateur"),
         _ => field.ToString()
     };
 
     private static string OperatorLabel(DeployCriterionOperator op) => op switch
     {
         DeployCriterionOperator.Contains => "contient",
-        DeployCriterionOperator.NotContains => "ne contient pas",
+        DeployCriterionOperator.NotContains => T("ne contient pas"),
         DeployCriterionOperator.Is => "est",
-        DeployCriterionOperator.IsNot => "n'est pas",
-        DeployCriterionOperator.IsEmpty => "est vide",
+        DeployCriterionOperator.IsNot => T("n'est pas"),
+        DeployCriterionOperator.IsEmpty => T("est vide"),
         _ => op.ToString()
     };
 
-    private static string LinkLabel(DeployCriterionLink link) => link == DeployCriterionLink.Or ? "OU" : "ET";
+    private static string LinkLabel(DeployCriterionLink link) => link == DeployCriterionLink.Or ? T("OU") : T("ET");
 }

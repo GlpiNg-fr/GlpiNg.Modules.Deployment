@@ -1,6 +1,7 @@
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -93,10 +94,10 @@ public partial class Supervision : ComponentBase, IDisposable
 
     private static string StatusLabel(DeploymentStatus status) => status switch
     {
-        DeploymentStatus.Pending => "En attente",
-        DeploymentStatus.Running => "En cours",
-        DeploymentStatus.Success => "Réussi",
-        DeploymentStatus.Error => "En erreur",
+        DeploymentStatus.Pending => Tr.T("En attente"),
+        DeploymentStatus.Running => Tr.T("En cours"),
+        DeploymentStatus.Success => Tr.T("Réussi"),
+        DeploymentStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 

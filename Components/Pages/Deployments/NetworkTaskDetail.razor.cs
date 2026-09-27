@@ -3,6 +3,7 @@ using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -222,10 +223,10 @@ public partial class NetworkTaskDetail : ComponentBase, IAsyncDisposable
 
     private static string StatusLabel(NetworkJobStatus status) => status switch
     {
-        NetworkJobStatus.Pending => "En attente",
-        NetworkJobStatus.Running => "En cours",
-        NetworkJobStatus.Success => "Réussi",
-        NetworkJobStatus.Error => "En erreur",
+        NetworkJobStatus.Pending => Tr.T("En attente"),
+        NetworkJobStatus.Running => Tr.T("En cours"),
+        NetworkJobStatus.Success => Tr.T("Réussi"),
+        NetworkJobStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 
@@ -241,10 +242,10 @@ public partial class NetworkTaskDetail : ComponentBase, IAsyncDisposable
     // Miroir des vérifications de NetworkTaskLaunchService.LaunchAsync.
     private static string? LaunchDisabledReason(NetworkTask task)
     {
-        if (!task.IsActive) return "Cette tâche est désactivée.";
-        if (task.IpRanges.Count == 0) return "Aucune plage IP configurée.";
-        if (task.Method == NetworkTaskMethod.NetworkInventory && task.Credentials.Count == 0) return "Aucun identifiant SNMP configuré.";
-        if (task.Actors.Count == 0) return "Aucun acteur configuré.";
+        if (!task.IsActive) return Tr.T("Cette tâche est désactivée.");
+        if (task.IpRanges.Count == 0) return Tr.T("Aucune plage IP configurée.");
+        if (task.Method == NetworkTaskMethod.NetworkInventory && task.Credentials.Count == 0) return Tr.T("Aucun identifiant SNMP configuré.");
+        if (task.Actors.Count == 0) return Tr.T("Aucun acteur configuré.");
 
         return null;
     }

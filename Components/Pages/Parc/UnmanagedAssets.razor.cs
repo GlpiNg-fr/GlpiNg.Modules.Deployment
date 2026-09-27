@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
@@ -185,7 +186,7 @@ public partial class UnmanagedAssets : ComponentBase
 
         if (tracked is null || tracked.Status != DiscoveredDeviceStatus.New)
         {
-            _message = "Cet actif a déjà été traité.";
+            _message = Tr.T("Cet actif a déjà été traité.");
             _messageIsError = true;
             await LoadAsync();
             return;
@@ -217,7 +218,7 @@ public partial class UnmanagedAssets : ComponentBase
         tracked.Status = DiscoveredDeviceStatus.Imported;
         await db.SaveChangesAsync();
 
-        _message = $"« {name} » converti en {PromotionTargets.First(t => t.Target == target).Label.ToLowerInvariant()}.";
+        _message = Tr.T("« {0} » converti en {1}.", name, PromotionTargets.First(t => t.Target == target).Label.ToLowerInvariant());
         _messageIsError = false;
         await LoadAsync();
     }
@@ -241,9 +242,9 @@ public partial class UnmanagedAssets : ComponentBase
 
     private static string StatusLabel(DiscoveredDeviceStatus status) => status switch
     {
-        DiscoveredDeviceStatus.New => "Nouveau",
-        DiscoveredDeviceStatus.Imported => "Converti",
-        DiscoveredDeviceStatus.Ignored => "Ignoré",
+        DiscoveredDeviceStatus.New => Tr.T("Nouveau"),
+        DiscoveredDeviceStatus.Imported => Tr.T("Converti"),
+        DiscoveredDeviceStatus.Ignored => Tr.T("Ignoré"),
         _ => status.ToString(),
     };
 

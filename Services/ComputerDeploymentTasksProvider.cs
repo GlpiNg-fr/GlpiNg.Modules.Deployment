@@ -2,6 +2,7 @@ using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -59,7 +60,7 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
                 TaskId = task.Id,
                 Name = task.Name,
                 Active = task.IsActive,
-                MethodLabel = "Déploiement de package",
+                MethodLabel = Tr.T("Déploiement de package"),
                 Executions = (jobsByTaskId.TryGetValue(task.Id, out List<DeploymentJob>? jobs) ? jobs : [])
                     .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
                     .Select(j => new ComputerDeploymentTaskExecution
@@ -121,7 +122,7 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
                 TaskId = task.Id,
                 Name = task.Name,
                 Active = task.IsActive,
-                MethodLabel = "Réveil réseau (WakeOnLan)",
+                MethodLabel = Tr.T("Réveil réseau (WakeOnLan)"),
                 Executions = (wakeOnLanJobsByTaskId.TryGetValue(task.Id, out List<WakeOnLanTaskJob>? jobs) ? jobs : [])
                     .OrderByDescending(j => j.StartedAt ?? j.CreatedAt)
                     .Select(j => new ComputerDeploymentTaskExecution
@@ -240,10 +241,10 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
 
     private static string StatusLabel(DeploymentStatus status) => status switch
     {
-        DeploymentStatus.Pending => "En attente",
-        DeploymentStatus.Running => "En cours",
-        DeploymentStatus.Success => "Réussi",
-        DeploymentStatus.Error => "En erreur",
+        DeploymentStatus.Pending => Tr.T("En attente"),
+        DeploymentStatus.Running => Tr.T("En cours"),
+        DeploymentStatus.Success => Tr.T("Réussi"),
+        DeploymentStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 
@@ -258,10 +259,10 @@ public sealed class ComputerDeploymentTasksProvider(IDbContextFactory<DbContext>
 
     private static string WakeOnLanStatusLabel(WakeOnLanJobStatus status) => status switch
     {
-        WakeOnLanJobStatus.Pending => "En attente",
-        WakeOnLanJobStatus.Running => "En cours",
-        WakeOnLanJobStatus.Success => "Réussi",
-        WakeOnLanJobStatus.Error => "En erreur",
+        WakeOnLanJobStatus.Pending => Tr.T("En attente"),
+        WakeOnLanJobStatus.Running => Tr.T("En cours"),
+        WakeOnLanJobStatus.Success => Tr.T("Réussi"),
+        WakeOnLanJobStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 

@@ -4,6 +4,7 @@ using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -244,8 +245,8 @@ public partial class DeploymentRuleDetail : ComponentBase, IAsyncDisposable
             }
 
             _evaluationResultMessage = _matches.Count == 0
-                ? "Aucun ordinateur ne correspond actuellement à ces critères."
-                : $"{_matches.Count} ordinateur(s) correspondant(s), {assignedComputers} nouvelle(s) assignation(s).";
+                ? Tr.T("Aucun ordinateur ne correspond actuellement à ces critères.")
+                : Tr.T("{0} ordinateur(s) correspondant(s), {1} nouvelle(s) assignation(s).", _matches.Count, assignedComputers);
         }
         finally
         {

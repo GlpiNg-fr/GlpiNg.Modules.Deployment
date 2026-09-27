@@ -1,6 +1,7 @@
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -94,13 +95,13 @@ public partial class TimeSlotDetail : ComponentBase, IAsyncDisposable
 
     private static string DayLabel(DayOfWeek day) => day switch
     {
-        DayOfWeek.Monday => "Lundi",
-        DayOfWeek.Tuesday => "Mardi",
-        DayOfWeek.Wednesday => "Mercredi",
-        DayOfWeek.Thursday => "Jeudi",
-        DayOfWeek.Friday => "Vendredi",
-        DayOfWeek.Saturday => "Samedi",
-        DayOfWeek.Sunday => "Dimanche",
+        DayOfWeek.Monday => Tr.T("Lundi"),
+        DayOfWeek.Tuesday => Tr.T("Mardi"),
+        DayOfWeek.Wednesday => Tr.T("Mercredi"),
+        DayOfWeek.Thursday => Tr.T("Jeudi"),
+        DayOfWeek.Friday => Tr.T("Vendredi"),
+        DayOfWeek.Saturday => Tr.T("Samedi"),
+        DayOfWeek.Sunday => Tr.T("Dimanche"),
         _ => day.ToString()
     };
 

@@ -1,6 +1,7 @@
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -64,8 +65,8 @@ public partial class UserInteractionTemplateDetail : ComponentBase, IAsyncDispos
 
     private static string InteractionTypeLabel(DeploymentUserInteractionType type) => type switch
     {
-        DeploymentUserInteractionType.InfoMessage => "Message d'information",
-        DeploymentUserInteractionType.AcceptRefuse => "Accepter / Refuser",
+        DeploymentUserInteractionType.InfoMessage => Tr.T("Message d'information"),
+        DeploymentUserInteractionType.AcceptRefuse => Tr.T("Accepter / Refuser"),
         _ => type.ToString()
     };
 

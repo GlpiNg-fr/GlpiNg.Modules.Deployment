@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -179,14 +180,14 @@ public partial class Tasks : ComponentBase
     // le refus après coup.
     private static string? LaunchDisabledReason(DeploymentTask task)
     {
-        if (!task.IsActive) return "Cette tâche est désactivée.";
-        if (task.Packages.Count == 0) return "Aucun paquet configuré.";
-        if (task.Targets.Count == 0) return "Aucun acteur configuré.";
+        if (!task.IsActive) return Tr.T("Cette tâche est désactivée.");
+        if (task.Packages.Count == 0) return Tr.T("Aucun paquet configuré.");
+        if (task.Targets.Count == 0) return Tr.T("Aucun acteur configuré.");
 
         bool hasCompletedRun = task.Jobs.Count > 0 && task.Jobs.All(job => job.Status is DeploymentStatus.Success or DeploymentStatus.Error);
         if (hasCompletedRun && !task.AllowRePreparation)
         {
-            return "Déjà exécutée : activez la re-préparation pour la relancer.";
+            return Tr.T("Déjà exécutée : activez la re-préparation pour la relancer.");
         }
 
         return null;

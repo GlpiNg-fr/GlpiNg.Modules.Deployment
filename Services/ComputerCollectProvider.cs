@@ -1,6 +1,7 @@
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -12,9 +13,9 @@ public sealed class ComputerCollectProvider(IDbContextFactory<DbContext> dbFacto
 {
     public static string TypeLabel(CollectType type) => type switch
     {
-        CollectType.Registry => "Registre",
-        CollectType.Wmi => "WMI",
-        CollectType.FileSearch => "Recherche de fichiers",
+        CollectType.Registry => Tr.T("Registre"),
+        CollectType.Wmi => Tr.T("WMI"),
+        CollectType.FileSearch => Tr.T("Recherche de fichiers"),
         _ => type.ToString(),
     };
 
@@ -35,7 +36,7 @@ public sealed class ComputerCollectProvider(IDbContextFactory<DbContext> dbFacto
                 .Select(group => new ComputerCollectGroup
                 {
                     CollectId = group.Key,
-                    Name = group.First().CollectDefinition?.Name ?? $"Collecte #{group.Key}",
+                    Name = group.First().CollectDefinition?.Name ?? Tr.T("Collecte #{0}", group.Key),
                     TypeLabel = TypeLabel(group.First().Type),
                     LastCollectedAt = group.Max(result => result.CollectedAt),
                     Entries =

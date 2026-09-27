@@ -2,7 +2,7 @@
 @using GlpiNg.Modules.Inventory.Models
 @rendermode InteractiveServer
 
-<PageTitle>Agents — GlpiNg</PageTitle>
+<PageTitle>@T("Agents — GlpiNg")</PageTitle>
 
 <DeploymentTopMenu Current="agents" />
 
@@ -13,7 +13,7 @@
             <span class="input-icon-addon">
                 <i class="ti ti-search"></i>
             </span>
-            <input type="text" class="form-control" placeholder="Rechercher un agent..."
+            <input type="text" class="form-control" placeholder="@(T("Rechercher un agent..."))"
                    @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
         </div>
     </div>
@@ -22,19 +22,19 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Nom</th>
-                    <th>Élément associé</th>
-                    <th>Tag</th>
-                    <th>Version de l'agent</th>
-                    <th>Deviceid</th>
-                    <th>Dernier contact</th>
+                    <th>@T("Nom")</th>
+                    <th>@T("Élément associé")</th>
+                    <th>@T("Tag")</th>
+                    <th>@T("Version de l'agent")</th>
+                    <th>@T("Deviceid")</th>
+                    <th>@T("Dernier contact")</th>
                 </tr>
             </thead>
             <tbody>
                 @if (_filteredAgents.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="text-center text-secondary py-4">Aucun agent trouvé.</td>
+                        <td colspan="6" class="text-center text-secondary py-4">@T("Aucun agent trouvé.")</td>
                     </tr>
                 }
                 else

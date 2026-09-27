@@ -1,4 +1,5 @@
 using GlpiNg.Modules.Deployment.Models;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -13,13 +14,13 @@ public static class TimeSlotHelper
     {
         if (timeSlotId is not { } id)
         {
-            return "Aucun créneau sélectionné.";
+            return Tr.T("Aucun créneau sélectionné.");
         }
 
         TimeSlot? slot = availableTimeSlots.FirstOrDefault(s => s.Id == id);
         if (slot is null || slot.Entries.Count == 0)
         {
-            return "Ce créneau n'a aucune entrée configurée.";
+            return Tr.T("Ce créneau n'a aucune entrée configurée.");
         }
 
         return string.Join(", ", slot.Entries
@@ -30,13 +31,13 @@ public static class TimeSlotHelper
 
     public static string DayLabel(DayOfWeek day) => day switch
     {
-        DayOfWeek.Monday => "Lundi",
-        DayOfWeek.Tuesday => "Mardi",
-        DayOfWeek.Wednesday => "Mercredi",
-        DayOfWeek.Thursday => "Jeudi",
-        DayOfWeek.Friday => "Vendredi",
-        DayOfWeek.Saturday => "Samedi",
-        DayOfWeek.Sunday => "Dimanche",
+        DayOfWeek.Monday => Tr.T("Lundi"),
+        DayOfWeek.Tuesday => Tr.T("Mardi"),
+        DayOfWeek.Wednesday => Tr.T("Mercredi"),
+        DayOfWeek.Thursday => Tr.T("Jeudi"),
+        DayOfWeek.Friday => Tr.T("Vendredi"),
+        DayOfWeek.Saturday => Tr.T("Samedi"),
+        DayOfWeek.Sunday => Tr.T("Dimanche"),
         _ => day.ToString()
     };
 }

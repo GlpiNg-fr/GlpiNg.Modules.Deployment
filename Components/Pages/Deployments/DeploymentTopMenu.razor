@@ -3,125 +3,125 @@
         <ul class="nav nav-tabs card-header-tabs" style="border-bottom: none;">
             <li class="nav-item">
                 <a href="/tools/deployments" class="nav-link @(Current == "dashboard" ? "active" : "")">
-                    <i class="ti ti-layout-dashboard me-1"></i>Tableau de bord
+                    <i class="ti ti-layout-dashboard me-1"></i>@T("Tableau de bord")
                 </a>
             </li>
             <li class="nav-item dropdown">
                 <button type="button" class="nav-link dropdown-toggle @(IsGeneralSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-settings me-1"></i>Général
+                    <i class="ti ti-settings me-1"></i>@T("Général")
                 </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item @(Current == "agents" ? "active" : "")" href="/tools/deployments/agent">
-                            <i class="ti ti-cpu me-2"></i>Gestion des agents
+                            <i class="ti ti-cpu me-2"></i>@T("Gestion des agents")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "computergroups" ? "active" : "")" href="/tools/deployments/computer-groups">
-                            <i class="ti ti-devices me-2"></i>Groupe d'ordinateurs
+                            <i class="ti ti-devices me-2"></i>@T("Groupe d'ordinateurs")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "deploymentconfig" ? "active" : "")" href="/tools/deployments/config">
-                            <i class="ti ti-settings me-2"></i>Configuration générale
+                            <i class="ti ti-settings me-2"></i>@T("Configuration générale")
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item dropdown">
                 <button type="button" class="nav-link dropdown-toggle @(IsTasksSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-list-check me-1"></i>Tâches
+                    <i class="ti ti-list-check me-1"></i>@T("Tâches")
                 </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item @(Current == "tasks" ? "active" : "")" href="/tools/deployments/tasks">
-                            <i class="ti ti-list-check me-2"></i>Gestion des tâches
+                            <i class="ti ti-list-check me-2"></i>@T("Gestion des tâches")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "supervision" ? "active" : "")" href="/tools/deployments/supervision">
-                            <i class="ti ti-activity me-2"></i>Supervision / Logs
+                            <i class="ti ti-activity me-2"></i>@T("Supervision / Logs")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" href="/admin/inventory">
-                            <i class="ti ti-file-upload me-2"></i>Importer un fichier de l'agent
+                            <i class="ti ti-file-upload me-2"></i>@T("Importer un fichier de l'agent")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "collects" ? "active" : "")" href="/tools/deployments/collects">
-                            <i class="ti ti-file-database me-2"></i>Informations de collecte
+                            <i class="ti ti-file-database me-2"></i>@T("Informations de collecte")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "timeslots" ? "active" : "")" href="/tools/deployments/timeslots">
-                            <i class="ti ti-calendar-time me-2"></i>Créneau horaire
+                            <i class="ti ti-calendar-time me-2"></i>@T("Créneau horaire")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "wakeonlantasks" ? "active" : "")" href="/tools/deployments/wakeonlan">
-                            <i class="ti ti-plug-connected me-2"></i>Réveil réseau (WakeOnLan)
+                            <i class="ti ti-plug-connected me-2"></i>@T("Réveil réseau (WakeOnLan)")
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item">
                 <a href="/tools/deployments/rules" class="nav-link @(Current == "rules" ? "active" : "")">
-                    <i class="ti ti-git-branch me-1"></i>Règles
+                    <i class="ti ti-git-branch me-1"></i>@T("Règles")
                 </a>
             </li>
             <li class="nav-item dropdown">
                 <button type="button" class="nav-link dropdown-toggle @(IsReseauSection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-router me-1"></i>Réseau
+                    <i class="ti ti-router me-1"></i>@T("Réseau")
                 </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item @(Current == "ipranges" ? "active" : "")" href="/tools/deployments/ipranges">
-                            <i class="ti ti-list-numbers me-2"></i>Plages IP
+                            <i class="ti ti-list-numbers me-2"></i>@T("Plages IP")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "snmpcredentials" ? "active" : "")" href="/tools/deployments/snmpcredentials">
-                            <i class="ti ti-key me-2"></i>Identifiants SNMP
+                            <i class="ti ti-key me-2"></i>@T("Identifiants SNMP")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "networktasks" ? "active" : "")" href="/tools/deployments/networktasks">
-                            <i class="ti ti-radar-2 me-2"></i>Tâches réseau
+                            <i class="ti ti-radar-2 me-2"></i>@T("Tâches réseau")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "discovereddevices" ? "active" : "")" href="/tools/deployments/discovered-devices">
-                            <i class="ti ti-devices-search me-2"></i>Actifs non gérés
+                            <i class="ti ti-devices-search me-2"></i>@T("Actifs non gérés")
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item dropdown">
                 <button type="button" class="nav-link dropdown-toggle @(IsDeploySection ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-rocket me-1"></i>Déployer
+                    <i class="ti ti-rocket me-1"></i>@T("Déployer")
                 </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item @(Current == "packages" ? "active" : "")" href="/tools/deployments/packages">
-                            <i class="ti ti-package me-2"></i>Gestion de paquets
+                            <i class="ti ti-package me-2"></i>@T("Gestion de paquets")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "mirrors" ? "active" : "")" href="/tools/deployments/mirrors">
-                            <i class="ti ti-server-2 me-2"></i>Serveurs miroirs
+                            <i class="ti ti-server-2 me-2"></i>@T("Serveurs miroirs")
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item @(Current == "interactiontemplates" ? "active" : "")" href="/tools/deployments/interaction-templates">
-                            <i class="ti ti-message-2-question me-2"></i>Gabarits d'interactions utilisateurs
+                            <i class="ti ti-message-2-question me-2"></i>@T("Gabarits d'interactions utilisateurs")
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item">
-                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="Pas encore disponible">
-                    <i class="ti ti-help me-1"></i>Guide
+                <span class="nav-link disabled" aria-disabled="true" tabindex="-1" title="@(T("Pas encore disponible"))">
+                    <i class="ti ti-help me-1"></i>@T("Guide")
                 </span>
             </li>
         </ul>

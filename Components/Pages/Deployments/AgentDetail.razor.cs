@@ -1,6 +1,7 @@
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -178,14 +179,14 @@ public partial class AgentDetail : ComponentBase, IAsyncDisposable
 
     private static string TaskLabel(string task) => task.ToLowerInvariant() switch
     {
-        "inventory" => "Inventaire d'ordinateur",
-        "netdiscovery" => "Découverte réseau (SNMP)",
-        "netinventory" => "Inventaire réseau (SNMP)",
-        "wakeonlan" => "Wake on LAN",
-        "deploy" => "Déploiement de paquets",
-        "collect" => "Récolter des données",
-        "remoteinventory" => "Inventaire distant",
-        "esx" => "Inventaire distant ESX",
+        "inventory" => Tr.T("Inventaire d'ordinateur"),
+        "netdiscovery" => Tr.T("Découverte réseau (SNMP)"),
+        "netinventory" => Tr.T("Inventaire réseau (SNMP)"),
+        "wakeonlan" => Tr.T("Wake on LAN"),
+        "deploy" => Tr.T("Déploiement de paquets"),
+        "collect" => Tr.T("Récolter des données"),
+        "remoteinventory" => Tr.T("Inventaire distant"),
+        "esx" => Tr.T("Inventaire distant ESX"),
         _ => task
     };
 

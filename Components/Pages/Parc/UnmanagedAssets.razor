@@ -8,7 +8,7 @@
    reste la vue « exploitation » (suivi d'un scan) ; celle-ci est la vue « inventaire », avec
    recherche, tri, pagination et conversion vers le type d'actif voulu. *@
 
-<PageTitle>Actifs non gérés — GlpiNg</PageTitle>
+<PageTitle>@T("Actifs non gérés — GlpiNg")</PageTitle>
 
 <div class="glping-list-page">
 <div class="card">
@@ -16,19 +16,19 @@
         <div class="btn-list">
             <div class="input-icon" style="width: 260px;">
                 <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                <input type="text" class="form-control" placeholder="Rechercher..." value="@_search"
+                <input type="text" class="form-control" placeholder="@(T("Rechercher..."))" value="@_search"
                        @oninput="@((ChangeEventArgs e) => OnSearchInput((string?)e.Value))" />
             </div>
             <select class="form-select w-auto" value="@(_statusFilter?.ToString() ?? "")" @onchange="OnStatusFilterChanged">
-                <option value="">Tous les états</option>
-                <option value="@nameof(DiscoveredDeviceStatus.New)">Nouveau</option>
-                <option value="@nameof(DiscoveredDeviceStatus.Imported)">Converti</option>
-                <option value="@nameof(DiscoveredDeviceStatus.Ignored)">Ignoré</option>
+                <option value="">@T("Tous les états")</option>
+                <option value="@nameof(DiscoveredDeviceStatus.New)">@T("Nouveau")</option>
+                <option value="@nameof(DiscoveredDeviceStatus.Imported)">@T("Converti")</option>
+                <option value="@nameof(DiscoveredDeviceStatus.Ignored)">@T("Ignoré")</option>
             </select>
         </div>
 
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
         </div>
@@ -43,13 +43,13 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("ip")'>Adresse IP @SortIndicator("ip")</th>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("hostname")'>Nom d'hôte @SortIndicator("hostname")</th>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("mac")'>Adresse MAC @SortIndicator("mac")</th>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("type")'>Type deviné @SortIndicator("type")</th>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("lastseen")'>Vu le @SortIndicator("lastseen")</th>
-                    <th class="glping-sortable-th" @onclick='() => SetSort("status")'>État @SortIndicator("status")</th>
-                    <th class="text-end">Actions</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("ip")'>@T("Adresse IP") @SortIndicator("ip")</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("hostname")'>@T("Nom d'hôte") @SortIndicator("hostname")</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("mac")'>@T("Adresse MAC") @SortIndicator("mac")</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("type")'>@T("Type deviné") @SortIndicator("type")</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("lastseen")'>@T("Vu le") @SortIndicator("lastseen")</th>
+                    <th class="glping-sortable-th" @onclick='() => SetSort("status")'>@T("État") @SortIndicator("status")</th>
+                    <th class="text-end">@T("Actions")</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,7 +57,7 @@
                 {
                     <tr>
                         <td colspan="7" class="text-center text-secondary py-4">
-                            Aucun actif non géré. Ils apparaissent ici après une tâche de découverte réseau.
+                            @T("Aucun actif non géré. Ils apparaissent ici après une tâche de découverte réseau.")
                         </td>
                     </tr>
                 }
@@ -78,28 +78,28 @@
                                     <div class="btn-list justify-content-end">
                                         <div class="dropdown">
                                             <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ti ti-arrow-move-right me-1"></i>Convertir en
+                                                <i class="ti ti-arrow-move-right me-1"></i>@T("Convertir en")
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 @foreach ((PromotionTarget target, string label, string icon) in PromotionTargets)
                                                 {
                                                     <li>
                                                         <button type="button" class="dropdown-item" @onclick="() => PromoteAsync(device, target)">
-                                                            <i class="ti @icon me-2"></i>@label
+                                                            <i class="ti @icon me-2"></i>@T(label)
                                                         </button>
                                                     </li>
                                                 }
                                             </ul>
                                         </div>
                                         <button type="button" class="btn btn-sm" @onclick="() => IgnoreAsync(device)">
-                                            <i class="ti ti-eye-off me-1"></i>Ignorer
+                                            <i class="ti ti-eye-off me-1"></i>@T("Ignorer")
                                         </button>
                                     </div>
                                 }
                                 else if (device.Status == DiscoveredDeviceStatus.Imported && device.PromotedNetworkEquipment is { } promoted)
                                 {
                                     <a href="@($"/parc/network-equipments/{promoted.Id}")" class="btn btn-sm">
-                                        <i class="ti ti-external-link me-1"></i>Voir l'actif
+                                        <i class="ti ti-external-link me-1"></i>@T("Voir l'actif")
                                     </a>
                                 }
                                 else
@@ -116,7 +116,7 @@
 
     <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div class="d-flex align-items-center gap-2 text-secondary">
-            <span>Éléments par page</span>
+            <span>@T("Éléments par page")</span>
             <select class="form-select form-select-sm w-auto" value="@_pageSize"
                     @onchange="@((ChangeEventArgs e) => SetPageSize(int.Parse((string)e.Value!)))">
                 @foreach (int size in PageSizeOptions)
@@ -130,7 +130,7 @@
         {
             <div class="d-flex align-items-center gap-3">
                 <span class="text-secondary">
-                    @(((_currentPage - 1) * _pageSize) + 1)–@(Math.Min(_currentPage * _pageSize, _filtered.Count)) sur @_filtered.Count
+                    @T("{0}–{1} sur {2}", ((_currentPage - 1) * _pageSize) + 1, Math.Min(_currentPage * _pageSize, _filtered.Count), _filtered.Count)
                 </span>
                 <ul class="pagination pagination-sm m-0">
                     <li class="page-item @(_currentPage <= 1 ? "disabled" : "")">
@@ -138,7 +138,7 @@
                             <i class="ti ti-chevron-left"></i>
                         </button>
                     </li>
-                    <li class="page-item disabled"><span class="page-link">Page @_currentPage / @TotalPages</span></li>
+                    <li class="page-item disabled"><span class="page-link">@T("Page {0} / {1}", _currentPage, TotalPages)</span></li>
                     <li class="page-item @(_currentPage >= TotalPages ? "disabled" : "")">
                         <button type="button" class="page-link" @onclick="() => GoToPage(_currentPage + 1)" disabled="@(_currentPage >= TotalPages)">
                             <i class="ti ti-chevron-right"></i>

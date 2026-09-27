@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
@@ -35,29 +36,29 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
 
         if (task is null)
         {
-            return Fail("Tâche introuvable.");
+            return Fail(Tr.T("Tâche introuvable."));
         }
 
         if (!task.IsActive)
         {
-            return Fail("Cette tâche est désactivée.");
+            return Fail(Tr.T("Cette tâche est désactivée."));
         }
 
         List<int> packageIds = task.Packages.Select(p => p.PackageId).Distinct().ToList();
         if (packageIds.Count == 0)
         {
-            return Fail("Aucun paquet configuré pour cette tâche.");
+            return Fail(Tr.T("Aucun paquet configuré pour cette tâche."));
         }
 
         if (task.Targets.Count == 0)
         {
-            return Fail("Aucun acteur configuré pour cette tâche.");
+            return Fail(Tr.T("Aucun acteur configuré pour cette tâche."));
         }
 
         int existingPackageCount = await db.Set<DeploymentPackage>().CountAsync(p => packageIds.Contains(p.Id), cancellationToken);
         if (existingPackageCount != packageIds.Count)
         {
-            return Fail("Au moins un des paquets associés à cette tâche n'existe plus.");
+            return Fail(Tr.T("Au moins un des paquets associés à cette tâche n'existe plus."));
         }
 
         // Un fichier sans fragment est un fichier dont le contenu n'a pas été téléversé — le cas
@@ -81,7 +82,7 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
         bool hasCompletedRun = task.Jobs.Count > 0 && task.Jobs.All(j => j.Status is DeploymentStatus.Success or DeploymentStatus.Error);
         if (hasCompletedRun && !task.AllowRePreparation)
         {
-            return Fail("Cette tâche a déjà été exécutée. Activez « Permet la re-préparation de la tâche après son exécution » pour la relancer.");
+            return Fail(Tr.T("Cette tâche a déjà été exécutée. Activez « Permet la re-préparation de la tâche après son exécution » pour la relancer."));
         }
 
         HashSet<int> computerIds = [];
@@ -126,7 +127,7 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
         if (agentIds.Count == 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            return Fail("Aucun ordinateur ciblé par cette tâche n'a d'agent GLPI-Agent associé.");
+            return Fail(Tr.T("Aucun ordinateur ciblé par cette tâche n'a d'agent GLPI-Agent associé."));
         }
 
         List<DeploymentJob> newJobs = [];
@@ -150,7 +151,7 @@ public sealed class DeploymentTaskLaunchService(IDbContextFactory<DbContext> dbF
         return new DeploymentTaskLaunchResult
         {
             Success = true,
-            Message = $"{newJobs.Count} job(s) de déploiement créé(s) ({agentIds.Count} agent(s) × {packageIds.Count} paquet(s)).",
+            Message = Tr.T("{0} job(s) de déploiement créé(s) ({1} agent(s) × {2} paquet(s)).", newJobs.Count, agentIds.Count, packageIds.Count),
             JobsCreated = newJobs.Count
         };
     }

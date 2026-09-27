@@ -2,15 +2,15 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>Déploiements — GlpiNg</PageTitle>
+<PageTitle>@T("Déploiements — GlpiNg")</PageTitle>
 
 <DeploymentTopMenu Current="supervision" />
 
 <div class="glping-list-page">
 <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
-        <span class="text-secondary">@_jobs.Count exécution(s) de tâche de déploiement</span>
-        <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+        <span class="text-secondary">@T("{0} exécution(s) de tâche de déploiement", _jobs.Count)</span>
+        <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
             <i class="ti ti-refresh"></i>
         </button>
     </div>
@@ -19,13 +19,13 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Paquet</th>
-                    <th>Agent</th>
-                    <th>Statut</th>
-                    <th>Créé le</th>
-                    <th>Démarré le</th>
-                    <th>Terminé le</th>
+                    <th>@T("ID")</th>
+                    <th>@T("Paquet")</th>
+                    <th>@T("Agent")</th>
+                    <th>@T("Statut")</th>
+                    <th>@T("Créé le")</th>
+                    <th>@T("Démarré le")</th>
+                    <th>@T("Terminé le")</th>
                     <th></th>
                 </tr>
             </thead>
@@ -33,7 +33,7 @@
                 @if (_jobs.Count == 0)
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-secondary py-4">Aucune exécution de tâche de déploiement.</td>
+                        <td colspan="8" class="text-center text-secondary py-4">@T("Aucune exécution de tâche de déploiement.")</td>
                     </tr>
                 }
                 else
@@ -61,7 +61,7 @@
                                 @if (!string.IsNullOrWhiteSpace(job.Log))
                                 {
                                     <button type="button" class="btn btn-sm" @onclick="() => ToggleLog(job.Id)">
-                                        <i class="ti ti-file-text me-1"></i>Journal
+                                        <i class="ti ti-file-text me-1"></i>@T("Journal")
                                     </button>
                                 }
                             </td>

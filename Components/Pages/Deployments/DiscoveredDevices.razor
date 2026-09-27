@@ -2,7 +2,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>Déploiements — GlpiNg</PageTitle>
+<PageTitle>@T("Déploiements — GlpiNg")</PageTitle>
 
 <DeploymentTopMenu Current="discovereddevices" />
 
@@ -20,15 +20,15 @@
     <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
         <div class="btn-list">
             <select class="form-select" style="max-width: 220px;" value="@_statusFilter" @onchange="OnStatusFilterChanged">
-                <option value="">Tous les statuts</option>
-                <option value="@DiscoveredDeviceStatus.New">Nouveaux</option>
-                <option value="@DiscoveredDeviceStatus.Imported">Importés</option>
-                <option value="@DiscoveredDeviceStatus.Ignored">Ignorés</option>
+                <option value="">@T("Tous les statuts")</option>
+                <option value="@DiscoveredDeviceStatus.New">@T("Nouveaux")</option>
+                <option value="@DiscoveredDeviceStatus.Imported">@T("Importés")</option>
+                <option value="@DiscoveredDeviceStatus.Ignored">@T("Ignorés")</option>
             </select>
         </div>
 
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
         </div>
@@ -38,14 +38,14 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Adresse IP</th>
-                    <th>Adresse MAC</th>
-                    <th>Nom d'hôte</th>
-                    <th>Type deviné</th>
-                    <th>Découvert via</th>
-                    <th>Vu la première fois</th>
-                    <th>Vu la dernière fois</th>
-                    <th>Statut</th>
+                    <th>@T("Adresse IP")</th>
+                    <th>@T("Adresse MAC")</th>
+                    <th>@T("Nom d'hôte")</th>
+                    <th>@T("Type deviné")</th>
+                    <th>@T("Découvert via")</th>
+                    <th>@T("Vu la première fois")</th>
+                    <th>@T("Vu la dernière fois")</th>
+                    <th>@T("Statut")</th>
                     <th></th>
                 </tr>
             </thead>
@@ -53,7 +53,7 @@
                 @if (_devices.Count == 0)
                 {
                     <tr>
-                        <td colspan="9" class="text-center text-secondary py-4">Aucun équipement réseau découvert.</td>
+                        <td colspan="9" class="text-center text-secondary py-4">@T("Aucun équipement réseau découvert.")</td>
                     </tr>
                 }
                 else
@@ -83,16 +83,16 @@
                                 {
                                     <div class="btn-list justify-content-end">
                                         <button type="button" class="btn btn-sm btn-primary" @onclick="() => PromoteAsync(device)">
-                                            <i class="ti ti-arrow-big-right-lines me-1"></i>Promouvoir
+                                            <i class="ti ti-arrow-big-right-lines me-1"></i>@T("Promouvoir")
                                         </button>
                                         <button type="button" class="btn btn-sm" @onclick="() => IgnoreAsync(device)">
-                                            <i class="ti ti-eye-off me-1"></i>Ignorer
+                                            <i class="ti ti-eye-off me-1"></i>@T("Ignorer")
                                         </button>
                                     </div>
                                 }
                                 else if (device.Status == DiscoveredDeviceStatus.Imported && device.PromotedNetworkEquipment is not null)
                                 {
-                                    <a href="@($"/parc/network-equipments/{device.PromotedNetworkEquipment.Id}")">Voir la fiche</a>
+                                    <a href="@($"/parc/network-equipments/{device.PromotedNetworkEquipment.Id}")">@T("Voir la fiche")</a>
                                 }
                             </td>
                         </tr>

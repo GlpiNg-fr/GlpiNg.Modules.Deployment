@@ -2,6 +2,7 @@ using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -138,7 +139,7 @@ public sealed class SelfServiceDeploymentService(
             return new DeploymentAssignmentResult
             {
                 Status = DeploymentAssignmentStatus.PackageNotFound,
-                ErrorMessage = "Ce paquet n'est pas disponible pour ce poste."
+                ErrorMessage = Tr.T("Ce paquet n'est pas disponible pour ce poste.")
             };
         }
 
@@ -239,10 +240,10 @@ public sealed class SelfServiceDeploymentService(
 
     private static string StatusLabel(DeploymentStatus status) => status switch
     {
-        DeploymentStatus.Pending => "En attente",
-        DeploymentStatus.Running => "En cours",
-        DeploymentStatus.Success => "Réussi",
-        DeploymentStatus.Error => "En erreur",
+        DeploymentStatus.Pending => Tr.T("En attente"),
+        DeploymentStatus.Running => Tr.T("En cours"),
+        DeploymentStatus.Success => Tr.T("Réussi"),
+        DeploymentStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 

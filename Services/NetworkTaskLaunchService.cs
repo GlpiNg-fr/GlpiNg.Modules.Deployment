@@ -1,5 +1,6 @@
 using GlpiNg.Modules.Deployment.Models;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Services;
 
@@ -36,27 +37,27 @@ public sealed class NetworkTaskLaunchService(IDbContextFactory<DbContext> dbFact
 
         if (task is null)
         {
-            return Fail("Tâche introuvable.");
+            return Fail(Tr.T("Tâche introuvable."));
         }
 
         if (!task.IsActive)
         {
-            return Fail("Cette tâche est désactivée.");
+            return Fail(Tr.T("Cette tâche est désactivée."));
         }
 
         if (task.IpRanges.Count == 0)
         {
-            return Fail("Aucune plage IP configurée pour cette tâche.");
+            return Fail(Tr.T("Aucune plage IP configurée pour cette tâche."));
         }
 
         if (task.Method == NetworkTaskMethod.NetworkInventory && task.Credentials.Count == 0)
         {
-            return Fail("Aucun identifiant SNMP configuré pour cette tâche d'inventaire réseau.");
+            return Fail(Tr.T("Aucun identifiant SNMP configuré pour cette tâche d'inventaire réseau."));
         }
 
         if (task.Actors.Count == 0)
         {
-            return Fail("Aucun acteur (agent) configuré pour cette tâche.");
+            return Fail(Tr.T("Aucun acteur (agent) configuré pour cette tâche."));
         }
 
         task.LastLaunchedAt = DateTime.UtcNow;
@@ -76,7 +77,7 @@ public sealed class NetworkTaskLaunchService(IDbContextFactory<DbContext> dbFact
         return new NetworkTaskLaunchResult
         {
             Success = true,
-            Message = $"{newJobs.Count} job(s) réseau créé(s) ({task.Actors.Count} agent(s)).",
+            Message = Tr.T("{0} job(s) réseau créé(s) ({1} agent(s)).", newJobs.Count, task.Actors.Count),
             JobsCreated = newJobs.Count
         };
     }

@@ -3,7 +3,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_group?.Name ?? "Groupe d'ordinateurs") — GlpiNg</PageTitle>
+<PageTitle>@(_group?.Name ?? T("Groupe d'ordinateurs")) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="computergroups" />
 
@@ -11,7 +11,7 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-devices-off fs-1"></i>
-        <p class="mt-2">Ce groupe d'ordinateurs est introuvable.</p>
+        <p class="mt-2">@T("Ce groupe d'ordinateurs est introuvable.")</p>
     </div>
 }
 else
@@ -20,19 +20,19 @@ else
         <aside class="glping-fiche-sidebar">
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-devices"></i>
-                <span>Groupe d'inventaire</span>
+                <span>@T("Groupe d'inventaire")</span>
             </button>
             @if (_group.Type == DeployComputerGroupType.Dynamic)
             {
                 <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "criteria" ? "active" : "")" @onclick='() => SetTab("criteria")'>
                     <i class="ti ti-filter"></i>
-                    <span>Critères</span>
+                    <span>@T("Critères")</span>
                     <span class="glping-fiche-tab-count">@_group.Criteria.Count</span>
                 </button>
             }
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "members" ? "active" : "")" @onclick='() => SetTab("members")'>
                 <i class="ti ti-list"></i>
-                <span>Éléments rattachés</span>
+                <span>@T("Éléments rattachés")</span>
                 <span class="glping-fiche-tab-count">@(_group.Type == DeployComputerGroupType.Dynamic ? _dynamicMatches.Count : _group.Members.Count)</span>
             </button>
         </aside>
@@ -44,20 +44,20 @@ else
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Nom</label>
+                                <label>@T("Nom")</label>
                                 <input class="form-control" @bind="_group.Name" @bind:event="oninput" />
                             </div>
                             <div class="glping-fiche-field">
-                                <label>Type</label>
+                                <label>@T("Type")</label>
                                 <select class="form-select" @bind="_group.Type">
-                                    <option value="@DeployComputerGroupType.Static">Groupe statique</option>
-                                    <option value="@DeployComputerGroupType.Dynamic">Groupe dynamique</option>
+                                    <option value="@DeployComputerGroupType.Static">@T("Groupe statique")</option>
+                                    <option value="@DeployComputerGroupType.Dynamic">@T("Groupe dynamique")</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Commentaires</label>
+                                <label>@T("Commentaires")</label>
                                 <textarea class="form-control" rows="4" @bind="_group.Comment"></textarea>
                             </div>
                         </div>
@@ -65,20 +65,19 @@ else
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                         </button>
                         <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                         </button>
                     </div>
                     break;
 
                 case "criteria":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>Critères (@_group.Criteria.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-filter"></i>@T("Critères ({0})", _group.Criteria.Count)</div>
                         <p class="text-secondary">
-                            Un ordinateur appartient au groupe si l'ensemble des critères ci-dessous, combinés dans
-                            l'ordre via ET/OU, est vérifié. Sans critère, le groupe ne contient aucun ordinateur.
+                            @T("Un ordinateur appartient au groupe si l'ensemble des critères ci-dessous, combinés dans l'ordre via ET/OU, est vérifié. Sans critère, le groupe ne contient aucun ordinateur.")
                         </p>
 
                         @if (_group.Criteria.Count > 0)
@@ -87,10 +86,10 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Lien</th>
-                                            <th>Champ</th>
-                                            <th>Opérateur</th>
-                                            <th>Valeur</th>
+                                            <th>@T("Lien")</th>
+                                            <th>@T("Champ")</th>
+                                            <th>@T("Opérateur")</th>
+                                            <th>@T("Valeur")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -116,14 +115,14 @@ else
 
                         <div class="row g-2 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Lien</label>
+                                <label class="form-label">@T("Lien")</label>
                                 <select class="form-select" @bind="_newCriterion.Link" disabled="@(_group.Criteria.Count == 0)">
-                                    <option value="@DeployCriterionLink.And">ET</option>
-                                    <option value="@DeployCriterionLink.Or">OU</option>
+                                    <option value="@DeployCriterionLink.And">@T("ET")</option>
+                                    <option value="@DeployCriterionLink.Or">@T("OU")</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Champ</label>
+                                <label class="form-label">@T("Champ")</label>
                                 <select class="form-select" @bind="_newCriterion.Field" @bind:after="OnCriterionFieldChanged">
                                     @foreach (DeployCriterionField field in Enum.GetValues<DeployCriterionField>())
                                     {
@@ -132,7 +131,7 @@ else
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Opérateur</label>
+                                <label class="form-label">@T("Opérateur")</label>
                                 <select class="form-select" @bind="_newCriterion.Operator" @bind:after="OnCriterionOperatorChanged">
                                     @foreach (DeployCriterionOperator op in Enum.GetValues<DeployCriterionOperator>())
                                     {
@@ -141,7 +140,7 @@ else
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Valeur</label>
+                                <label class="form-label">@T("Valeur")</label>
                                 @if (_newCriterion.Operator == DeployCriterionOperator.IsEmpty)
                                 {
                                     <input class="form-control" disabled placeholder="—" />
@@ -164,7 +163,7 @@ else
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-primary w-100" @onclick="AddCriterionAsync">
-                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                 </button>
                             </div>
                         </div>
@@ -175,20 +174,20 @@ else
                     @if (_group.Type == DeployComputerGroupType.Dynamic)
                     {
                         <div class="glping-fiche-block">
-                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs correspondants (@_dynamicMatches.Count)</div>
+                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>@T("Ordinateurs correspondants ({0})", _dynamicMatches.Count)</div>
 
                             @if (_group.Criteria.Count == 0)
                             {
                                 <div class="glping-config-placeholder">
                                     <i class="ti ti-filter"></i>
-                                    <p class="mb-0">Ajoutez au moins un critère dans l'onglet « Critères » pour peupler ce groupe.</p>
+                                    <p class="mb-0">@T("Ajoutez au moins un critère dans l'onglet « Critères » pour peupler ce groupe.")</p>
                                 </div>
                             }
                             else if (_dynamicMatches.Count == 0)
                             {
                                 <div class="glping-config-placeholder">
                                     <i class="ti ti-list-search"></i>
-                                    <p class="mb-0">Aucun ordinateur ne correspond actuellement à ces critères.</p>
+                                    <p class="mb-0">@T("Aucun ordinateur ne correspond actuellement à ces critères.")</p>
                                 </div>
                             }
                             else
@@ -197,7 +196,7 @@ else
                                     <table class="table table-vcenter card-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Nom</th>
+                                                <th>@T("Nom")</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -216,7 +215,7 @@ else
                     else
                     {
                         <div class="glping-fiche-block">
-                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>Ordinateurs (@_group.Members.Count)</div>
+                            <div class="glping-fiche-block-title"><i class="ti ti-list"></i>@T("Ordinateurs ({0})", _group.Members.Count)</div>
 
                             @if (_group.Members.Count > 0)
                             {
@@ -224,7 +223,7 @@ else
                                     <table class="table table-vcenter card-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Nom</th>
+                                                <th>@T("Nom")</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -256,14 +255,14 @@ else
 
                             <div class="d-flex gap-2">
                                 <select class="form-select" style="max-width: 320px;" @bind="_computerIdToAdd">
-                                    <option value="0">-- Choisir un ordinateur --</option>
+                                    <option value="0">@T("-- Choisir un ordinateur --")</option>
                                     @foreach (Computer computer in _availableComputers)
                                     {
                                         <option value="@computer.Id">@computer.Name</option>
                                     }
                                 </select>
                                 <button type="button" class="btn btn-primary" disabled="@(_computerIdToAdd == 0)" @onclick="AddMemberAsync">
-                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                 </button>
                             </div>
                         </div>

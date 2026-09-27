@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
@@ -85,7 +86,7 @@ public partial class DiscoveredDevices : ComponentBase
         tracked.PromotedNetworkEquipmentId = equipment.Id;
         await db.SaveChangesAsync();
 
-        _message = $"« {equipment.Name} » ajouté aux matériels réseau.";
+        _message = Tr.T("« {0} » ajouté aux matériels réseau.", equipment.Name);
         _messageIsError = false;
         await LoadAsync();
     }
@@ -107,9 +108,9 @@ public partial class DiscoveredDevices : ComponentBase
 
     private static string StatusLabel(DiscoveredDeviceStatus status) => status switch
     {
-        DiscoveredDeviceStatus.New => "Nouveau",
-        DiscoveredDeviceStatus.Imported => "Importé",
-        DiscoveredDeviceStatus.Ignored => "Ignoré",
+        DiscoveredDeviceStatus.New => Tr.T("Nouveau"),
+        DiscoveredDeviceStatus.Imported => Tr.T("Importé"),
+        DiscoveredDeviceStatus.Ignored => Tr.T("Ignoré"),
         _ => status.ToString()
     };
 

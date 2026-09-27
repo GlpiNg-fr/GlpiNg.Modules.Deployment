@@ -3,7 +3,7 @@
 @using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_task?.Name ?? "Tâche") — GlpiNg</PageTitle>
+<PageTitle>@(_task?.Name ?? T("Tâche")) — GlpiNg</PageTitle>
 
 <DeploymentTopMenu Current="tasks" />
 
@@ -11,26 +11,25 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-list-check fs-1"></i>
-        <p class="mt-2">Cette tâche de déploiement est introuvable.</p>
+        <p class="mt-2">@T("Cette tâche de déploiement est introuvable.")</p>
     </div>
 }
 else
 {
     <div class="glping-fiche-topbar">
-        <a class="glping-fiche-pager-btn" href="/tools/deployments/tasks" title="Retour à la liste">
+        <a class="glping-fiche-pager-btn" href="/tools/deployments/tasks" title="@(T("Retour à la liste"))">
             <i class="ti ti-list"></i>
         </a>
         <div class="glping-fiche-crumb">
             <i class="ti ti-list-check"></i>
-            <span>Tâche - @_task.Name - ID @_task.Id</span>
+            <span>@T("Tâche - {0} - ID {1}", _task.Name, _task.Id)</span>
         </div>
         <div class="glping-fiche-toolbar">
             <span class="text-secondary me-2">
-                <i class="ti ti-history me-1"></i>Dernière exécution :
-                @(_task.LastLaunchedAt is { } last ? Display.DateTime(last) : "jamais")
+                <i class="ti ti-history me-1"></i>@T("Dernière exécution : {0}", _task.LastLaunchedAt is { } last ? Display.DateTime(last) : "jamais")
             </span>
             <button type="button" class="btn btn-primary" disabled="@(LaunchDisabledReason(_task) is not null || _isLaunching)"
-                    title="@(LaunchDisabledReason(_task) ?? "Lancer maintenant")" @onclick="LaunchAsync">
+                    title="@(LaunchDisabledReason(_task) ?? T("Lancer maintenant"))" @onclick="LaunchAsync">
                 @if (_isLaunching)
                 {
                     <span class="spinner-border spinner-border-sm me-1"></span>
@@ -39,7 +38,7 @@ else
                 {
                     <i class="ti ti-player-play me-1"></i>
                 }
-                Lancer maintenant
+                @T("Lancer maintenant")
             </button>
         </div>
     </div>
@@ -56,15 +55,15 @@ else
         <aside class="glping-fiche-sidebar">
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-list-check"></i>
-                <span>Gestion des tâches</span>
+                <span>@T("Gestion des tâches")</span>
             </button>
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "job" ? "active" : "")" @onclick='() => SetTab("job")'>
                 <i class="ti ti-settings"></i>
-                <span>Configuration du job</span>
+                <span>@T("Configuration du job")</span>
             </button>
             <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "history" ? "active" : "")" @onclick='() => SetTab("history")'>
                 <i class="ti ti-history"></i>
-                <span>Exécutions des jobs</span>
+                <span>@T("Exécutions des jobs")</span>
                 <span class="glping-fiche-tab-count">@_task.Jobs.Count</span>
             </button>
         </aside>
@@ -76,13 +75,13 @@ else
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Nom</label>
+                                <label>@T("Nom")</label>
                                 <input class="form-control" @bind="_task.Name" @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Commentaires</label>
+                                <label>@T("Commentaires")</label>
                                 <textarea class="form-control" rows="3" @bind="_task.Comment"></textarea>
                             </div>
                         </div>
@@ -90,22 +89,22 @@ else
                         <div class="col-md-6">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="taskAllowRePreparation" @bind="_task.AllowRePreparation" />
-                                <label class="form-check-label" for="taskAllowRePreparation">Permet la re-préparation de la tâche après son exécution</label>
+                                <label class="form-check-label" for="taskAllowRePreparation">@T("Permet la re-préparation de la tâche après son exécution")</label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="taskActive" @bind="_task.IsActive" />
-                                <label class="form-check-label" for="taskActive">Activé</label>
+                                <label class="form-check-label" for="taskActive">@T("Activé")</label>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Heure de démarrage planifiée</label>
+                                <label>@T("Heure de démarrage planifiée")</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledStartTime" />
-                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledStartTime = null" title="Effacer">
+                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledStartTime = null" title="@(T("Effacer"))">
                                         <i class="ti ti-x"></i>
                                     </button>
                                 </div>
@@ -113,10 +112,10 @@ else
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Heure de fin planifiée</label>
+                                <label>@T("Heure de fin planifiée")</label>
                                 <div class="input-group">
                                     <input type="datetime-local" class="form-control" @bind="_task.ScheduledEndTime" />
-                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledEndTime = null" title="Effacer">
+                                    <button type="button" class="btn btn-icon" @onclick="() => _task.ScheduledEndTime = null" title="@(T("Effacer"))">
                                         <i class="ti ti-x"></i>
                                     </button>
                                 </div>
@@ -125,7 +124,7 @@ else
 
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Créneau horaire de préparation</label>
+                                <label>@T("Créneau horaire de préparation")</label>
                                 <div class="input-group">
                                     <select class="form-select" @bind="_task.PreparationTimeSlotId">
                                         <option value="">-----</option>
@@ -134,7 +133,7 @@ else
                                             <option value="@slot.Id">@slot.Name</option>
                                         }
                                     </select>
-                                    <button type="button" class="btn btn-icon" title="@TimeSlotTooltip(_task.PreparationTimeSlotId)">
+                                    <button type="button" class="btn btn-icon" title="@(T("{0}", TimeSlotTooltip(_task.PreparationTimeSlotId)))">
                                         <i class="ti ti-info-circle"></i>
                                     </button>
                                 </div>
@@ -142,7 +141,7 @@ else
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Créneau horaire d'exécution</label>
+                                <label>@T("Créneau horaire d'exécution")</label>
                                 <div class="input-group">
                                     <select class="form-select" @bind="_task.ExecutionTimeSlotId">
                                         <option value="">-----</option>
@@ -151,7 +150,7 @@ else
                                             <option value="@slot.Id">@slot.Name</option>
                                         }
                                     </select>
-                                    <button type="button" class="btn btn-icon" title="@TimeSlotTooltip(_task.ExecutionTimeSlotId)">
+                                    <button type="button" class="btn btn-icon" title="@(T("{0}", TimeSlotTooltip(_task.ExecutionTimeSlotId)))">
                                         <i class="ti ti-info-circle"></i>
                                     </button>
                                 </div>
@@ -159,16 +158,13 @@ else
                         </div>
                         <div class="col-12">
                             <small class="text-secondary">
-                                Créneaux gérés depuis <a href="/tools/deployments/timeslots">Créneau horaire</a>. Le créneau d'exécution et la
-                                fenêtre planifiée ci-dessus sont appliqués automatiquement par le module Scheduler (lancement automatique dès
-                                que la fenêtre s'ouvre) ; le créneau de préparation reste purement déclaratif — pas de pré-téléchargement de
-                                paquets côté GlpiNg.
+                                @T("Créneaux gérés depuis") <a href="/tools/deployments/timeslots">@T("Créneau horaire")</a>@T(". Le créneau d'exécution et la fenêtre planifiée ci-dessus sont appliqués automatiquement par le module Scheduler (lancement automatique dès que la fenêtre s'ouvre) ; le créneau de préparation reste purement déclaratif — pas de pré-téléchargement de paquets côté GlpiNg.")
                             </small>
                         </div>
 
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Intervalle de réveil des agents (en minutes)</label>
+                                <label>@T("Intervalle de réveil des agents (en minutes)")</label>
                                 <select class="form-select" @bind="_task.AgentWakeUpIntervalMinutes">
                                     @foreach (int minutes in WakeUpIntervalOptions)
                                     {
@@ -179,7 +175,7 @@ else
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Nombre d'agents à réveiller</label>
+                                <label>@T("Nombre d'agents à réveiller")</label>
                                 <select class="form-select" @bind="_task.AgentWakeUpCount">
                                     @foreach (int count in WakeUpCountOptions)
                                     {
@@ -189,35 +185,35 @@ else
                             </div>
                         </div>
                         <div class="col-12">
-                            <small class="text-secondary">GlpiNg ne sait pas encore émettre de paquet Wake-on-LAN — champs capturés pour la parité de formulaire uniquement.</small>
+                            <small class="text-secondary">@T("GlpiNg ne sait pas encore émettre de paquet Wake-on-LAN — champs capturés pour la parité de formulaire uniquement.")</small>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                            <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                         </button>
                         <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                         </button>
                     </div>
                     break;
 
                 case "job":
                     <div class="glping-fiche-field">
-                        <label>Méthode du module</label>
+                        <label>@T("Méthode du module")</label>
                         <select class="form-select" disabled>
-                            <option>Inventaire distant des hôtes VMware</option>
-                            <option>Découverte réseau</option>
-                            <option>Inventaire réseau (SNMP)</option>
-                            <option selected>Déploiement de package</option>
-                            <option>Collecte de donnée</option>
+                            <option>@T("Inventaire distant des hôtes VMware")</option>
+                            <option>@T("Découverte réseau")</option>
+                            <option>@T("Inventaire réseau (SNMP)")</option>
+                            <option selected>@T("Déploiement de package")</option>
+                            <option>@T("Collecte de donnée")</option>
                         </select>
-                        <small class="text-secondary">Seul « Déploiement de package » est disponible dans GlpiNg pour le moment — les autres méthodes suivront (voir les onglets « Réseau »/« Règles »).</small>
+                        <small class="text-secondary">@T("Seul « Déploiement de package » est disponible dans GlpiNg pour le moment — les autres méthodes suivront (voir les onglets « Réseau »/« Règles »).")</small>
                     </div>
 
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>Paquets (@_task.Packages.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-package"></i>@T("Paquets ({0})", _task.Packages.Count)</div>
 
                         @if (_task.Packages.Count > 0)
                         {
@@ -225,7 +221,7 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Nom</th>
+                                            <th>@T("Nom")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -257,21 +253,21 @@ else
 
                         <div class="d-flex gap-2">
                             <select class="form-select" style="max-width: 320px;" @bind="_packageIdToAdd">
-                                <option value="0">-- Choisir un paquet --</option>
+                                <option value="0">@T("-- Choisir un paquet --")</option>
                                 @foreach (DeploymentPackage package in PackagesToAdd)
                                 {
                                     <option value="@package.Id">@package.Name</option>
                                 }
                             </select>
                             <button type="button" class="btn btn-primary" disabled="@(_packageIdToAdd == 0)" @onclick="AddPackageAsync">
-                                <i class="ti ti-plus me-1"></i>Ajouter
+                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                             </button>
                         </div>
                     </div>
 
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>Acteurs (@_task.Targets.Count)</div>
-                        <p class="text-secondary">Groupes d'ordinateurs (statiques ou dynamiques) et/ou ordinateurs individuels ciblés par le déploiement.</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-target-arrow"></i>@T("Acteurs ({0})", _task.Targets.Count)</div>
+                        <p class="text-secondary">@T("Groupes d'ordinateurs (statiques ou dynamiques) et/ou ordinateurs individuels ciblés par le déploiement.")</p>
 
                         @if (_task.Targets.Count > 0)
                         {
@@ -279,8 +275,8 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Type</th>
-                                            <th>Nom</th>
+                                            <th>@T("Type")</th>
+                                            <th>@T("Nom")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -316,23 +312,23 @@ else
                         }
                         else
                         {
-                            <small class="text-secondary d-block mb-3">Sans acteur, cette tâche ne peut pas être lancée.</small>
+                            <small class="text-secondary d-block mb-3">@T("Sans acteur, cette tâche ne peut pas être lancée.")</small>
                         }
 
                         <div class="row g-2 align-items-end">
                             <div class="col-md-3">
-                                <label class="form-label">Type</label>
+                                <label class="form-label">@T("Type")</label>
                                 <select class="form-select" @bind="_targetTypeToAdd">
-                                    <option value="@DeploymentTaskTargetType.Group">Groupe d'ordinateurs</option>
-                                    <option value="@DeploymentTaskTargetType.Computer">Ordinateur</option>
+                                    <option value="@DeploymentTaskTargetType.Group">@T("Groupe d'ordinateurs")</option>
+                                    <option value="@DeploymentTaskTargetType.Computer">@T("Ordinateur")</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 @if (_targetTypeToAdd == DeploymentTaskTargetType.Group)
                                 {
-                                    <label class="form-label">Groupe</label>
+                                    <label class="form-label">@T("Groupe")</label>
                                     <select class="form-select" @bind="_groupIdToAdd">
-                                        <option value="0">-- Choisir un groupe --</option>
+                                        <option value="0">@T("-- Choisir un groupe --")</option>
                                         @foreach (DeployComputerGroup group in GroupsToAdd)
                                         {
                                             <option value="@group.Id">@group.Name (@(group.Type == DeployComputerGroupType.Dynamic ? "dynamique" : "statique"))</option>
@@ -341,9 +337,9 @@ else
                                 }
                                 else
                                 {
-                                    <label class="form-label">Ordinateur</label>
+                                    <label class="form-label">@T("Ordinateur")</label>
                                     <select class="form-select" @bind="_computerIdToAdd">
-                                        <option value="0">-- Choisir un ordinateur --</option>
+                                        <option value="0">@T("-- Choisir un ordinateur --")</option>
                                         @foreach (Computer computer in ComputersToAdd)
                                         {
                                             <option value="@computer.Id">@computer.Name</option>
@@ -355,7 +351,7 @@ else
                                 <button type="button" class="btn btn-primary w-100"
                                         disabled="@(_targetTypeToAdd == DeploymentTaskTargetType.Group ? _groupIdToAdd == 0 : _computerIdToAdd == 0)"
                                         @onclick="AddTargetAsync">
-                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                 </button>
                             </div>
                         </div>
@@ -364,13 +360,13 @@ else
 
                 case "history":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Exécutions (@_task.Jobs.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Exécutions ({0})", _task.Jobs.Count)</div>
 
                         @if (_task.Jobs.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-history-toggle"></i>
-                                <p class="mb-0">Cette tâche n'a jamais été lancée.</p>
+                                <p class="mb-0">@T("Cette tâche n'a jamais été lancée.")</p>
                             </div>
                         }
                         else
@@ -379,11 +375,11 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Agent</th>
-                                            <th>Statut</th>
-                                            <th>Créé le</th>
-                                            <th>Démarré le</th>
-                                            <th>Terminé le</th>
+                                            <th>@T("Agent")</th>
+                                            <th>@T("Statut")</th>
+                                            <th>@T("Créé le")</th>
+                                            <th>@T("Démarré le")</th>
+                                            <th>@T("Terminé le")</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -400,7 +396,7 @@ else
                                                     @if (!string.IsNullOrWhiteSpace(job.Log))
                                                     {
                                                         <button type="button" class="btn btn-sm" @onclick="() => ToggleLog(job.Id)">
-                                                            <i class="ti ti-file-text me-1"></i>Journal
+                                                            <i class="ti ti-file-text me-1"></i>@T("Journal")
                                                         </button>
                                                     }
                                                 </td>

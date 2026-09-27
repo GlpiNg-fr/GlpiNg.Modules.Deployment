@@ -4,6 +4,7 @@ using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -214,7 +215,7 @@ public partial class WakeOnLanTaskDetail : ComponentBase, IAsyncDisposable
     private string TimeSlotTooltip(int? timeSlotId) => TimeSlotHelper.Tooltip(_availableTimeSlots, timeSlotId);
 
     private static string TargetTypeLabel(WakeOnLanTaskTargetType type) =>
-        type == WakeOnLanTaskTargetType.Computer ? "Ordinateur" : "Groupe d'ordinateurs";
+        type == WakeOnLanTaskTargetType.Computer ? Tr.T("Ordinateur") : Tr.T("Groupe d'ordinateurs");
 
     /// <summary>Nombre de cibles figées dans le job au lancement — voir la doc de WakeOnLanTaskJob.</summary>
     private static int TargetCount(WakeOnLanTaskJob job)
@@ -231,10 +232,10 @@ public partial class WakeOnLanTaskDetail : ComponentBase, IAsyncDisposable
 
     private static string StatusLabel(WakeOnLanJobStatus status) => status switch
     {
-        WakeOnLanJobStatus.Pending => "En attente",
-        WakeOnLanJobStatus.Running => "En cours",
-        WakeOnLanJobStatus.Success => "Réussi",
-        WakeOnLanJobStatus.Error => "En erreur",
+        WakeOnLanJobStatus.Pending => Tr.T("En attente"),
+        WakeOnLanJobStatus.Running => Tr.T("En cours"),
+        WakeOnLanJobStatus.Success => Tr.T("Réussi"),
+        WakeOnLanJobStatus.Error => Tr.T("En erreur"),
         _ => status.ToString()
     };
 
@@ -250,9 +251,9 @@ public partial class WakeOnLanTaskDetail : ComponentBase, IAsyncDisposable
     // Miroir des vérifications de WakeOnLanTaskLaunchService.LaunchAsync.
     private static string? LaunchDisabledReason(WakeOnLanTask task)
     {
-        if (!task.IsActive) return "Cette tâche est désactivée.";
-        if (task.Targets.Count == 0) return "Aucune cible configurée.";
-        if (task.RelayAgents.Count == 0) return "Aucun agent relais configuré.";
+        if (!task.IsActive) return Tr.T("Cette tâche est désactivée.");
+        if (task.Targets.Count == 0) return Tr.T("Aucune cible configurée.");
+        if (task.RelayAgents.Count == 0) return Tr.T("Aucun agent relais configuré.");
 
         return null;
     }

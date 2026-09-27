@@ -3,6 +3,7 @@ using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -216,35 +217,35 @@ public partial class ComputerGroupDetail : ComponentBase, IAsyncDisposable
     }
 
     private static string TypeLabel(DeployComputerGroupType type) =>
-        type == DeployComputerGroupType.Dynamic ? "Groupe dynamique" : "Groupe statique";
+        type == DeployComputerGroupType.Dynamic ? Tr.T("Groupe dynamique") : Tr.T("Groupe statique");
 
     private static string FieldLabel(DeployCriterionField field) => field switch
     {
-        DeployCriterionField.Name => "Nom",
-        DeployCriterionField.SerialNumber => "Numéro de série",
-        DeployCriterionField.Manufacturer => "Fabricant",
-        DeployCriterionField.Model => "Modèle",
-        DeployCriterionField.OperatingSystem => "Système d'exploitation",
-        DeployCriterionField.OsVersion => "Version de l'OS",
-        DeployCriterionField.Status => "Statut",
-        DeployCriterionField.Site => "Site",
-        DeployCriterionField.Building => "Bâtiment",
-        DeployCriterionField.Room => "Salle",
-        DeployCriterionField.AssignedUser => "Utilisateur",
+        DeployCriterionField.Name => Tr.T("Nom"),
+        DeployCriterionField.SerialNumber => Tr.T("Numéro de série"),
+        DeployCriterionField.Manufacturer => Tr.T("Fabricant"),
+        DeployCriterionField.Model => Tr.T("Modèle"),
+        DeployCriterionField.OperatingSystem => Tr.T("Système d'exploitation"),
+        DeployCriterionField.OsVersion => Tr.T("Version de l'OS"),
+        DeployCriterionField.Status => Tr.T("Statut"),
+        DeployCriterionField.Site => Tr.T("Site"),
+        DeployCriterionField.Building => Tr.T("Bâtiment"),
+        DeployCriterionField.Room => Tr.T("Salle"),
+        DeployCriterionField.AssignedUser => Tr.T("Utilisateur"),
         _ => field.ToString()
     };
 
     private static string OperatorLabel(DeployCriterionOperator op) => op switch
     {
         DeployCriterionOperator.Contains => "contient",
-        DeployCriterionOperator.NotContains => "ne contient pas",
+        DeployCriterionOperator.NotContains => Tr.T("ne contient pas"),
         DeployCriterionOperator.Is => "est",
-        DeployCriterionOperator.IsNot => "n'est pas",
-        DeployCriterionOperator.IsEmpty => "est vide",
+        DeployCriterionOperator.IsNot => Tr.T("n'est pas"),
+        DeployCriterionOperator.IsEmpty => Tr.T("est vide"),
         _ => op.ToString()
     };
 
-    private static string LinkLabel(DeployCriterionLink link) => link == DeployCriterionLink.Or ? "OU" : "ET";
+    private static string LinkLabel(DeployCriterionLink link) => link == DeployCriterionLink.Or ? Tr.T("OU") : Tr.T("ET");
 
     public async ValueTask DisposeAsync()
     {

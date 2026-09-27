@@ -5,6 +5,7 @@ using GlpiNg.Modules.Deployment.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -275,10 +276,10 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
     private static string TargetTypeLabel(DeploymentPackageTargetType type) => type switch
     {
-        DeploymentPackageTargetType.Entity => "Entité",
-        DeploymentPackageTargetType.Group => "Groupe",
-        DeploymentPackageTargetType.Profile => "Profil",
-        DeploymentPackageTargetType.User => "Utilisateur",
+        DeploymentPackageTargetType.Entity => Tr.T("Entité"),
+        DeploymentPackageTargetType.Group => Tr.T("Groupe"),
+        DeploymentPackageTargetType.Profile => Tr.T("Profil"),
+        DeploymentPackageTargetType.User => Tr.T("Utilisateur"),
         _ => type.ToString()
     };
 
@@ -307,7 +308,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
         try
         {
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Paquet enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Paquet enregistré.")));
         }
         finally
         {
@@ -510,7 +511,7 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
         }
         catch (JSException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'envoi du fichier : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Échec de l'envoi du fichier : {0}", ex.Message)));
         }
         finally
         {
@@ -553,39 +554,39 @@ public partial class PackageDetail : ComponentBase, IAsyncDisposable
 
     private static string CheckTypeLabel(DeploymentCheckType type) => type switch
     {
-        DeploymentCheckType.RegistryKeyExists => "La clef de registre existe",
-        DeploymentCheckType.RegistryValueExists => "La valeur de la clef existe",
-        DeploymentCheckType.RegistryKeyNotExists => "La clef de registre n'existe pas",
-        DeploymentCheckType.RegistryValueNotExists => "La valeur de la clef n'existe pas",
-        DeploymentCheckType.RegistryValueEquals => "La valeur de la clef est égale à",
-        DeploymentCheckType.RegistryValueNotEquals => "La valeur de la clef n'est pas égale à",
-        DeploymentCheckType.FileExists => "Le fichier existe",
-        DeploymentCheckType.FileNotExists => "Le fichier n'existe pas",
-        DeploymentCheckType.FileSizeGreater => "Taille du fichier supérieure à",
-        DeploymentCheckType.FileSizeEquals => "Taille du fichier égale à",
-        DeploymentCheckType.FileSizeLower => "Taille du fichier inférieure à",
-        DeploymentCheckType.FileSha512Equals => "La valeur du hash SHA-512 correspond à",
-        DeploymentCheckType.FileSha512NotEquals => "La valeur du hash SHA-512 ne correspond pas à",
-        DeploymentCheckType.DirectoryExists => "Le répertoire existe",
-        DeploymentCheckType.DirectoryNotExists => "Le répertoire n'existe pas",
-        DeploymentCheckType.FreeSpaceGreater => "L'espace libre est supérieur à",
+        DeploymentCheckType.RegistryKeyExists => Tr.T("La clef de registre existe"),
+        DeploymentCheckType.RegistryValueExists => Tr.T("La valeur de la clef existe"),
+        DeploymentCheckType.RegistryKeyNotExists => Tr.T("La clef de registre n'existe pas"),
+        DeploymentCheckType.RegistryValueNotExists => Tr.T("La valeur de la clef n'existe pas"),
+        DeploymentCheckType.RegistryValueEquals => Tr.T("La valeur de la clef est égale à"),
+        DeploymentCheckType.RegistryValueNotEquals => Tr.T("La valeur de la clef n'est pas égale à"),
+        DeploymentCheckType.FileExists => Tr.T("Le fichier existe"),
+        DeploymentCheckType.FileNotExists => Tr.T("Le fichier n'existe pas"),
+        DeploymentCheckType.FileSizeGreater => Tr.T("Taille du fichier supérieure à"),
+        DeploymentCheckType.FileSizeEquals => Tr.T("Taille du fichier égale à"),
+        DeploymentCheckType.FileSizeLower => Tr.T("Taille du fichier inférieure à"),
+        DeploymentCheckType.FileSha512Equals => Tr.T("La valeur du hash SHA-512 correspond à"),
+        DeploymentCheckType.FileSha512NotEquals => Tr.T("La valeur du hash SHA-512 ne correspond pas à"),
+        DeploymentCheckType.DirectoryExists => Tr.T("Le répertoire existe"),
+        DeploymentCheckType.DirectoryNotExists => Tr.T("Le répertoire n'existe pas"),
+        DeploymentCheckType.FreeSpaceGreater => Tr.T("L'espace libre est supérieur à"),
         _ => type.ToString()
     };
 
     private static string ActionTypeLabel(DeploymentActionType type) => type switch
     {
-        DeploymentActionType.Command => "Commande",
-        DeploymentActionType.Move => "Déplacer",
-        DeploymentActionType.Copy => "Copier",
-        DeploymentActionType.DeleteDirectory => "Supprimer un répertoire",
-        DeploymentActionType.CreateDirectory => "Créer un répertoire",
+        DeploymentActionType.Command => Tr.T("Commande"),
+        DeploymentActionType.Move => Tr.T("Déplacer"),
+        DeploymentActionType.Copy => Tr.T("Copier"),
+        DeploymentActionType.DeleteDirectory => Tr.T("Supprimer un répertoire"),
+        DeploymentActionType.CreateDirectory => Tr.T("Créer un répertoire"),
         _ => type.ToString()
     };
 
     private static string InteractionTypeLabel(DeploymentUserInteractionType type) => type switch
     {
-        DeploymentUserInteractionType.InfoMessage => "Message d'information",
-        DeploymentUserInteractionType.AcceptRefuse => "Accepter / Refuser",
+        DeploymentUserInteractionType.InfoMessage => Tr.T("Message d'information"),
+        DeploymentUserInteractionType.AcceptRefuse => Tr.T("Accepter / Refuser"),
         _ => type.ToString()
     };
 

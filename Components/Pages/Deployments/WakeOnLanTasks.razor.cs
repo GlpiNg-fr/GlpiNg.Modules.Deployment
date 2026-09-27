@@ -3,6 +3,7 @@ using GlpiNg.Modules.Deployment.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -131,9 +132,9 @@ public partial class WakeOnLanTasks : ComponentBase
     // MAC, connue seulement au lancement).
     private static string? LaunchDisabledReason(WakeOnLanTask task)
     {
-        if (!task.IsActive) return "Cette tâche est désactivée.";
-        if (task.Targets.Count == 0) return "Aucune cible configurée.";
-        if (task.RelayAgents.Count == 0) return "Aucun agent relais configuré.";
+        if (!task.IsActive) return Tr.T("Cette tâche est désactivée.");
+        if (task.Targets.Count == 0) return Tr.T("Aucune cible configurée.");
+        if (task.RelayAgents.Count == 0) return Tr.T("Aucun agent relais configuré.");
 
         return null;
     }

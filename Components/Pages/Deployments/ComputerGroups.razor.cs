@@ -2,6 +2,7 @@ using GlpiNg.Modules.Deployment.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
@@ -82,5 +83,5 @@ public partial class ComputerGroups : ComponentBase
     }
 
     private static string TypeLabel(DeployComputerGroupType type) =>
-        type == DeployComputerGroupType.Dynamic ? "Groupe dynamique" : "Groupe statique";
+        type == DeployComputerGroupType.Dynamic ? Tr.T("Groupe dynamique") : Tr.T("Groupe statique");
 }
