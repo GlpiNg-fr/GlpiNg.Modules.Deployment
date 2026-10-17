@@ -44,8 +44,13 @@ public class AgentInstallSettings
     /// <summary>Propriété MSI <c>INSTALLDIR</c> ; vide = répertoire par défaut de l'installeur.</summary>
     public string? InstallDir { get; set; }
 
-    /// <summary>Propriétés MSI supplémentaires, telles quelles (ex. <c>DEBUG=1 ADD_FIREWALL_EXCEPTION=1</c>).</summary>
-    public string? ExtraProperties { get; set; }
+    /// <summary>
+    /// Toutes les autres propriétés de l'installeur, indexées par nom MSI — voir
+    /// <see cref="AgentInstallProperties"/>, qui décrit celles que le formulaire propose. Seules
+    /// celles qui s'écartent de la valeur par défaut de l'installeur sont passées en ligne de
+    /// commande, pour qu'une commande reste lisible.
+    /// </summary>
+    public Dictionary<string, string> Properties { get; set; } = [];
 
     /// <summary>Port WinRM des postes cibles (5985 en HTTP, 5986 en HTTPS).</summary>
     public int WinRmPort { get; set; } = 5985;

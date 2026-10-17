@@ -157,10 +157,15 @@ public class AgentInstallService(IStoragePaths storagePaths)
             yield return $"HTTPD_PORT={settings.HttpdPort}";
         }
 
-        foreach (string extra in (settings.ExtraProperties ?? string.Empty)
-            .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        foreach (AgentInstallProperty property in AgentInstallProperties.All)
         {
-            yield return extra;
+            string value = (settings.Properties.GetValueOrDefault(property.Name) ?? string.Empty).Trim();
+
+            // Une valeur laissée à celle de l'installeur n'a pas à encombrer la ligne de commande.
+            if (value.Length > 0 && !value.Equals(property.Default, StringComparison.Ordinal))
+            {
+                yield return $"{property.Name}={value}";
+            }
         }
     }
 
