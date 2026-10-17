@@ -108,6 +108,16 @@
                         </a>
                     </li>
                     <li>
+                        <a class="dropdown-item @(Current == "agentinstall" ? "active" : "")" href="/tools/deployments/agent-install">
+                            <i class="ti ti-file-download me-2"></i>@T("Installation de l'agent")
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item @(Current == "agentdeploy" ? "active" : "")" href="/tools/deployments/agent-deploy">
+                            <i class="ti ti-device-desktop-plus me-2"></i>@T("Déployer l'agent")
+                        </a>
+                    </li>
+                    <li>
                         <a class="dropdown-item @(Current == "mirrors" ? "active" : "")" href="/tools/deployments/mirrors">
                             <i class="ti ti-server-2 me-2"></i>@T("Serveurs miroirs")
                         </a>
@@ -141,6 +151,6 @@
 
     private bool IsTasksSection => Current is "tasks" or "supervision" or "collects" or "timeslots" or "wakeonlantasks";
     private bool IsGeneralSection => Current is "agents" or "computergroups" or "deploymentconfig";
-    private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates";
+    private bool IsDeploySection => Current is "packages" or "mirrors" or "interactiontemplates" or "agentinstall" or "agentdeploy";
     private bool IsReseauSection => Current is "ipranges" or "snmpcredentials" or "networktasks" or "discovereddevices";
 }

@@ -32,6 +32,10 @@ public static class DeploymentModuleServiceCollectionExtensions
         // la machine d'en face n'est pas forcément proche.
         services.AddHttpClient<GlpiDeployFileFetcher>(client => client.Timeout = TimeSpan.FromMinutes(10));
 
+        // Installation de GLPI-Agent sur un poste distant encore dépourvu d'agent, par WinRM
+        // (pages /tools/deployments/agent-install et /agent-deploy) — voir AgentInstallService.
+        services.AddScoped<AgentInstallService>();
+
         // Lancement d'une DeploymentTask (page /tools/deployments/tasks) : crée les
         // DeploymentJob pour tous les agents du groupe cible — voir DeploymentTaskLaunchService.
         services.AddScoped<DeploymentTaskLaunchService>();
