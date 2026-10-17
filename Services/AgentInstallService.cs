@@ -58,6 +58,19 @@ public class AgentInstallService(IStoragePaths storagePaths)
     }
 
     /// <summary>
+    /// URL publique de l'installeur, déduite de l'URL du serveur annoncée aux agents : elle est
+    /// joignable depuis le poste par construction, ce dont une tâche de fond — sans requête HTTP
+    /// en cours, donc sans adresse de site — n'a aucun autre moyen de s'assurer. Null tant qu'il
+    /// n'y a pas d'installeur, ou si l'URL du serveur n'est pas exploitable.
+    /// </summary>
+    public static Uri? InstallerUrl(AgentInstallSettings settings)
+        => string.IsNullOrEmpty(settings.DownloadToken)
+            || string.IsNullOrWhiteSpace(settings.InstallerFileName)
+            || !Uri.TryCreate($"{settings.ServerUrl.TrimEnd('/')}/agent-installer/{settings.DownloadToken}", UriKind.Absolute, out Uri? url)
+            ? null
+            : url;
+
+    /// <summary>
     /// Installe l'agent sur <paramref name="host"/>. <paramref name="installerUrl"/> est l'URL
     /// publique (jetonnée) depuis laquelle le poste télécharge l'installeur.
     /// </summary>

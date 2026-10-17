@@ -48,6 +48,20 @@ public class DiscoveredNetworkDevice : IEntityScoped
     public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
     public DiscoveredDeviceStatus Status { get; set; } = DiscoveredDeviceStatus.New;
 
+    /// <summary>
+    /// Nombre d'installations automatiques de l'agent déjà tentées sur cet équipement — voir
+    /// <c>AgentAutoDeployCronTask</c>. Porté par l'équipement plutôt que par une table de suivi :
+    /// sans ce compteur, la tâche réessaierait indéfiniment, à chaque passage, sur tout ce que la
+    /// découverte réseau remonte — imprimantes et commutateurs compris — avec un compte
+    /// d'administration à la clé.
+    /// </summary>
+    public int AgentDeployAttempts { get; set; }
+
+    public DateTime? AgentDeployLastAttemptAt { get; set; }
+
+    /// <summary>Résultat de la dernière tentative : null si elle a réussi, le message d'échec sinon.</summary>
+    public string? AgentDeployLastError { get; set; }
+
     /// <summary>Renseigné une fois "promu" (bouton "Promouvoir" de DiscoveredDevices.razor) —
     /// équivalent de la conversion "Actif non géré" -> Matériel réseau côté GLPI-Inventory.</summary>
     public int? PromotedNetworkEquipmentId { get; set; }
