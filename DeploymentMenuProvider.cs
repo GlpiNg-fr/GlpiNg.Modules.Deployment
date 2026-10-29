@@ -22,6 +22,7 @@ public sealed class DeploymentMenuProvider : IMenuProvider
         new("outils", "ti-briefcase", "Outils",
         [
             new("Déploiements", "/tools/deployments", "ti-rocket"),
+            new("Libre-service", "/self-service", "ti-shopping-cart"),
         ]),
     ];
 }

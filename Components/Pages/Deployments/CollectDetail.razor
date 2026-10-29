@@ -1,5 +1,6 @@
 ﻿@page "/tools/deployments/collects/{CollectId:int}"
 @using GlpiNg.Modules.Deployment.Models
+@using GlpiNg.Modules.Inventory.Components.Shared
 @rendermode InteractiveServer
 
 <PageTitle>@(_collect?.Name ?? T("Informations de collecte")) — GlpiNg</PageTitle>
@@ -58,6 +59,7 @@ else
                         </div>
                     </div>
 
+                    <EntityScopeFields Item="_collect" />
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
                             <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")

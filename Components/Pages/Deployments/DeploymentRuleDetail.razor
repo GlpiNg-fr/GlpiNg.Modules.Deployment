@@ -1,6 +1,7 @@
 ﻿@page "/tools/deployments/rules/{RuleId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Modules.Deployment.Models
+@using GlpiNg.Modules.Inventory.Components.Shared
 @rendermode InteractiveServer
 
 <PageTitle>@(_rule?.Name ?? T("Règle de déploiement")) — GlpiNg</PageTitle>
@@ -70,6 +71,7 @@ else
                         </div>
                     </div>
 
+                    <EntityScopeFields Item="_rule" />
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
                             <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")

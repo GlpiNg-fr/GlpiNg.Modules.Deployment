@@ -1,5 +1,6 @@
 ﻿@page "/tools/deployments/timeslots/{TimeSlotId:int}"
 @using GlpiNg.Modules.Deployment.Models
+@using GlpiNg.Modules.Inventory.Components.Shared
 @rendermode InteractiveServer
 
 <PageTitle>@(_timeSlot?.Name ?? T("Créneau horaire")) — GlpiNg</PageTitle>
@@ -30,6 +31,7 @@ else
                 </div>
             </div>
         </div>
+        <EntityScopeFields Item="_timeSlot" />
         <div class="d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
                 <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
